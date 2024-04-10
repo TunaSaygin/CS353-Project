@@ -1,14 +1,23 @@
 .navbar-nav .nav-link {
-    transition: color 0.3s ease-in-out;
+    transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out, border-bottom 0.3s ease-in-out;
+    border-bottom: 2px solid transparent; /* Set to transparent by default */
+    padding-bottom: 0.5rem; /* Adjust padding to accommodate the border without shifting the text */
+    margin-right: 3px;
   }
   
   .navbar-nav .nav-link:hover, .navbar-nav .nav-link:focus {
-    color: #0056b3; /* Change the color on hover/focus */
-    background-color: #e7f5ff; /* Optional: add a background color on hover/focus */
+    color: #495057; /* A darker shade of gray for better contrast */
+    background-color: #f8f9fa; /* A very light gray for a subtle background highlight */
+    border-bottom: 2px solid black; /* Black underline on hover */
   }
   
-  /* If you want to change the hover effect for the active link as well */
+  /* Keep the active link distinct but still compatible */
+  .navbar-nav .nav-link.active {
+    border-bottom: 2px solid black; /* Black underline for the active link */
+  }
+  
   .navbar-nav .nav-link.active:hover, .navbar-nav .nav-link.active:focus {
-    color: #004085; /* Different color for active link hover */
-    background-color: #cce5ff; /* Optional: different background color for active link hover */
+    color: #212529; /* Bootstrap's default dark shade */
+    background-color: #e9ecef; /* A slightly darker shade of light gray for active link */
+    border-bottom: 2px solid black; /* Maintain black underline on hover for active link */
   }
