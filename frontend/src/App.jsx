@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Navbar from './components/navbar/navbar'
+import LoginForm from './components/loginbox/login'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -11,11 +12,10 @@ function App() {
   return (
     <>
       <Navbar />
-      <div className="container mt-5">
-        {/* Rest of the page content goes here */}
+      {/* <div className="container mt-5">
         <h1>Welcome to My App</h1>
-      </div>
-      
+      </div> */}
+      <LoginForm/>
     </>
   )
 }

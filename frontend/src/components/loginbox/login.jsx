@@ -1,7 +1,47 @@
 import React from 'react'
+import { useState } from 'react';
+import './login.css'
+import RegisterForm from './registerForm';
+import LoginFormComponent from './loginForm';
+export default function LoginForm() {
+  const [formType, setFormType] = useState('login'); // login or register
+  const [accountType, setAccountType] = useState('customer'); // customer, business, admin
 
-export default function Login() {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // Placeholder for submit logic
+    console.log(`Submitted ${formType} form for ${accountType} account.`);
+    // You'd put your login or registration logic here
+  };
+
   return (
-    <div>Login</div>
-  )
+    <div className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="toggle-container mb-3">
+            <button
+              className={`toggle-button ${formType === 'login' ? 'active' : ''}`}
+              onClick={() => setFormType('login')}
+            >
+              Login
+            </button>
+            <button
+              className={`toggle-button ${formType === 'register' ? 'active' : ''}`}
+              onClick={() => setFormType('register')}
+            >
+              Register
+            </button>
+          </div>
+          <div className="form-container">
+          <div className={`form-slide ${formType === 'login' ? 'form-slide-active' : 'form-slide-left'}`}>
+            <LoginFormComponent handleForm={handleSubmit}/>
+          </div>
+          <div className={`form-slide ${formType === 'register' ? 'form-slide-active' : 'form-slide-right'}`}>
+            <RegisterForm/>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
