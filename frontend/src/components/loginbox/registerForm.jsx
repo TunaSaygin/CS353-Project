@@ -9,8 +9,9 @@ export default function RegistrationForm() {
   };
 
   return (
-    <div className="container py-5">
-      <Tab.Container activeKey={key} onSelect={(k) => setKey(k)}>
+    <div className="container justify-content-start">
+      <h1>Register</h1>
+      <Tab.Container activeKey={key} onSelect={(k) => setKey(k)} className="mb-4">
         <Nav variant="pills" className="justify-content-center mb-4">
           <Nav.Item>
             <Nav.Link eventKey="customer">Customer</Nav.Link>
@@ -54,10 +55,13 @@ function RegistrationFormFields({ userType, handleRegistration }) {
           <Form.Control type="text" placeholder="Business name" />
         </Form.Group>
       )}
-
+      <Form.Group className="mb-3">
+        <Form.Label>Password</Form.Label>
+        <Form.Control type="email" placeholder="Enter email" />
+      </Form.Group>
       {/* ... other fields for admin or customer ... */}
 
-      <Button variant="primary" type="submit">
+      <Button type="submit">
         Register as {userType}
       </Button>
     </Form>

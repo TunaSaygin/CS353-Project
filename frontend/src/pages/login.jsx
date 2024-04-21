@@ -1,8 +1,8 @@
 import React from 'react'
 import { useState } from 'react';
 import './login.css'
-import RegisterForm from './registerForm';
-import LoginFormComponent from './loginForm';
+import RegisterForm from '../components/loginbox/registerForm';
+import LoginFormComponent from '../components/loginbox/loginForm';
 export default function LoginForm() {
   const [formType, setFormType] = useState('login'); // login or register
   const [accountType, setAccountType] = useState('customer'); // customer, business, admin

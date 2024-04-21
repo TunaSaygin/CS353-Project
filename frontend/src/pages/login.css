@@ -38,6 +38,7 @@
   position: relative;
   width: 100%;
   min-height: 400px;
+  height: 500px;
 }
 
 .form-slide {
@@ -63,4 +64,13 @@
 
 .form-slide-active {
   transform: translateX(0);
+}
+.btn-custom {
+  background-color: #36454F; /* Green */
+  border-color: #36454F; /* Darker green */
+}
+
+.btn-custom:hover {
+  background-color: #449d44; /* Darker green on hover */
+  border-color: #398439;
 }
