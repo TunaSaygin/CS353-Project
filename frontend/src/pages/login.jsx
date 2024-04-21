@@ -3,13 +3,18 @@ import { useState } from 'react';
 import './login.css'
 import RegisterForm from '../components/loginbox/registerForm';
 import LoginFormComponent from '../components/loginbox/loginForm';
+import { useAuth } from '../context/authcontext';
+import { useNavigate } from 'react-router-dom';
 export default function LoginForm() {
   const [formType, setFormType] = useState('login'); // login or register
   const [accountType, setAccountType] = useState('customer'); // customer, business, admin
-
+  const nav = useNavigate();
+  const {login} = useAuth();
   const handleSubmit = (event) => {
     event.preventDefault();
     // Placeholder for submit logic
+    login();
+    nav("/admin_page")
     console.log(`Submitted ${formType} form for ${accountType} account.`);
     // You'd put your login or registration logic here
   };
