@@ -3,6 +3,7 @@
     transition: color 0.3s ease-in-out, background-color 0.3s ease-in-out, border-bottom 0.3s ease-in-out;
     border-bottom: 2px solid transparent; /* Set to transparent by default */
     padding-bottom: 0.5rem; /* Adjust padding to accommodate the border without shifting the text */
+    min-height: 60px;
     margin-right: 3px;
   }
   
@@ -25,6 +26,7 @@
   /* navbar.css */
 .dropdown{
   min-width:50px;
+  min-height: 50px;
   padding-right: 2px;
 }
 /* Change the background color of the dropdown menu */

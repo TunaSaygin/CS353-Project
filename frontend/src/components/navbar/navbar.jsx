@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './navbar.css';
 import { useAuth } from '../../context/authcontext';
 import { Dropdown, Nav } from 'react-bootstrap';
@@ -11,7 +11,16 @@ export default function Navbar() {
     logout();
     nav("/login");
   };
-
+  const handleProfile = () =>{
+    nav("/profile");
+  }
+  const [profile, setProfile] = useState({
+    username: 'johndoe',
+    image: 'vite.svg',
+    balance: 100,
+    bio: 'A short bio here',
+    email: 'john.doe@example.com',
+  });
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light p-3">
       <div className="container-fluid">
@@ -26,7 +35,7 @@ export default function Navbar() {
                 <li className="nav-item px-2">
                   <Dropdown>
                     <Dropdown.Toggle variant='success' id="notifications-dropdown">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{width:'40px',height:'40px'}}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
 
@@ -39,11 +48,22 @@ export default function Navbar() {
                 </li>
                 <li className="nav-item">
                   <Dropdown>
-                    <Dropdown.Toggle variant="success" id="profile-dropdown">
-                      Profile
+                    <Dropdown.Toggle variant="success" id="profile-dropdown" className="d-flex justify-content-center align-items-center ">
+                      <div className="d-flex">
+                        <img
+                          src={profile.image} // Your profile image URL
+                          className="rounded-circle"
+                          alt="Profile"
+                          style={{ width: '30px', height: '30px', objectFit: 'cover' }}
+                        />
+                        <div className="ms-2 align-items-center flex-column align-items-start justify-content-center text-left">
+                          <div>{profile.username}</div> {/* User's name */}
+                          <div className="text-muted" style={{ fontSize: '0.8em' }}>balance: ${profile.balance}</div> {/* User's balance */}
+                        </div>
+                      </div>
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item href="#profile">My Profile</Dropdown.Item>
+                      <Dropdown.Item href="#profile" onClick={handleProfile}>My Profile</Dropdown.Item>
                       <Dropdown.Item href="#purchases">Past Purchases</Dropdown.Item>
                       <Dropdown.Item href="#!" onClick={handleLogout}>Logout</Dropdown.Item>
                     </Dropdown.Menu>
