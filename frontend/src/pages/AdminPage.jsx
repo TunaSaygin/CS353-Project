@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Table, InputGroup, FormControl, Container, Row, Col, Nav,Modal } from 'react-bootstrap';
+import { Button, Table, InputGroup, FormControl, Container, Row, Col, Nav,Modal,Form } from 'react-bootstrap';
 import Dashboard from '../components/graph';
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('businesses');
@@ -36,6 +36,13 @@ export default function AdminPage() {
     { name: 'Professional Yoga Mat', inventory: 80, sold: 120, price: '$34.99', category: 'Fitness', business: 'Yoga Essentials' },
     { name: 'Gourmet Coffee Beans', inventory: 300, sold: 250, price: '$12.99', category: 'Food', business: 'Aroma Brew' },
     { name: 'LED Desk Lamp', inventory: 50, sold: 100, price: '$45.99', category: 'Furniture', business: 'BrightLife' }
+  ];
+  const categoryData = [
+    { name: 'Electronics', totalProducts: 320, image: 'imageURL1' },
+    { name: 'Clothing', totalProducts: 150, image: 'imageURL2' },
+    { name: 'Home & Garden', totalProducts: 215, image: 'imageURL3' },
+    { name: 'Toys & Games', totalProducts: 89, image: 'imageURL4' },
+    { name: 'Sports', totalProducts: 78, image: 'imageURL5' }
   ];
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -112,7 +119,7 @@ export default function AdminPage() {
       {activeTab === 'categories' && (
         <Row>
           <Col>
-           <ProductTable products={productData} />
+           <CategoryTable categories={categoryData} />
           </Col>
         </Row>
       )}
@@ -310,8 +317,34 @@ function ProductTable({products}){
   );
 }
 function CategoryTable({categories}){
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState('');
+
+  const handleView = () => {
+    setModalContent('Update Category');
+    setShowModal(true);
+  };
+
+  const handleAddCategory = () => {
+    setModalContent('Add Category');
+    setShowModal(true);
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+  };
+  const [name, setName] = useState('');
+  const [image, setImage] = useState('');
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSave({ name, image });
+  };
+
+
   return(
     <>
+      <Button variant="primary" onClick={handleAddCategory}>Add Category</Button>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -320,30 +353,55 @@ function CategoryTable({categories}){
             <th>Image</th>
             <th>Actions</th>
           </tr>
-          </thead>
-          <tbody>
-            {categories.map((category, index) => (
-              <tr key={index}>
-                <td>{category.name}</td>
-                <td>{category.inventory}</td>
-                <td>{category.sold}</td>
-                <td>{category.image}</td>
-                <td>
-                  <div>
-                    <Button variant="outline-primary" onClick={handleView}>Update</Button>
-                    <Button variant="outline-primary" onClick={handleView}>Delete</Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+        </thead>
+        <tbody>
+          {categories.map((category, index) => (
+            <tr key={index}>
+              <td>{category.name}</td>
+              <td>{category.totalProducts}</td>
+              <td>
+                <img src={category.image} alt={category.name} style={{ width: '50px', height: '50px' }} />
+              </td>
+              <td>
+                <div>
+                  <Button variant="outline-primary" onClick={() => handleView(category)}>Update</Button>
+                  <Button variant="outline-primary" onClick={handleView}>Delete</Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </Table>
       <Modal show={showModal} onHide={handleClose} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>Dashboard</Modal.Title>
+          <Modal.Title>{modalContent}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h1>Sıla senin product detailin gelecek</h1>
+        <Form onSubmit={handleSubmit}>
+      <Form.Group className="mb-3">
+        <Form.Label>Category Name</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter category name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </Form.Group>
+      <Form.Group className="mb-3">
+        <Form.Label>Image URL</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter image URL"
+          value={image}
+          onChange={(e) => setImage(e.target.value)}
+          required
+        />
+      </Form.Group>
+      <Button variant="primary" type="submit">
+        Save Category
+      </Button>
+     </Form>
         </Modal.Body>
       </Modal>
     </>
