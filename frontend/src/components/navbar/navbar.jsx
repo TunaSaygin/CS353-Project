@@ -29,7 +29,7 @@ export default function Navbar() {
           <span className="navbar-toggler-icon"></span>
         </button>
         <div className="collapse navbar-collapse justify-content-end gap-3" id="navbarNav">
-          <ul className="navbar-nav gap-3">
+          <ul className="navbar-nav gap-3 align-items-center">
             {isLoggedIn ? (
               <>
                 <li className="nav-item px-2">
@@ -45,6 +45,9 @@ export default function Navbar() {
                       {/* Add more notifications here */}
                     </Dropdown.Menu>
                   </Dropdown>
+                </li>
+                <li className='nav-item px-2'>
+                  <Nav.Link href="/#" className='my-auto'>Add Balance</Nav.Link>
                 </li>
                 <li className="nav-item">
                   <Dropdown>

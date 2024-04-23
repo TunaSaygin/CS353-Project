@@ -9,6 +9,7 @@ import BussinessHome from './pages/Bussiness_Home'
 import AdminPage from './pages/AdminPage'
 import { AuthProvider, useAuth } from './context/authcontext'
 import Profile from './pages/Profile'
+import Dashboard from './components/graph'
 
 
 
@@ -34,6 +35,7 @@ function App() {
       <Routes>
         <Route path="/home_cust" element={<CustomerHome />} />
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/chart" element={<Dashboard />} />
         <Route path='/not_found' element={<NotFoundPage/>}/>
         <Route path='/admin_page' element={<PrivateRoute><AdminPage/></PrivateRoute>}/>
         <Route path='/profile' element={<PrivateRoute><Profile/></PrivateRoute>} />
