@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Nav } from 'react-bootstrap';
-const CategoryPopularityChart = () => {
+const CategoryPopularityChart = ({labels,valueList}) => {
   const data = {
     labels: ['Electronics', 'Books', 'Clothing', 'Home Appliances', 'Toys'],
     datasets: [
@@ -24,7 +24,7 @@ const CategoryPopularityChart = () => {
   return <Pie data={data} />;
 };
 
-const BusinessSalesChart = () => {
+const BusinessSalesChart = ({labels,valueList}) => {
   const data = {
     labels: ['Business A', 'Business B', 'Business C'],
     datasets: [
