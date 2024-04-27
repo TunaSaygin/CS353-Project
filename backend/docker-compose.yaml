@@ -1,14 +1,12 @@
 services:
   db:
-    container_name: postgresql
     image: postgres
     environment:
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_USER=postgres
+      - POSTGRES_DB=${P_DB}
+      - POSTGRES_USER=${P_USER}
+      - POSTGRES_PASSWORD=${P_PASS}
     ports:
       - "5432:5432"
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
   web:
     build:
       context: app
@@ -18,7 +16,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_USER=postgres
+      - POSTGRES_NAME=${P_DB}
+      - POSTGRES_USER=${P_USER}
+      - POSTGRES_PASSWORD=${P_PASS}
     depends_on:
       - db
