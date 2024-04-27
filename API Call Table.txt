@@ -1,0 +1,50 @@
+[Http GET] Getting the profile data
+/profile
+request: authentication token as JWT-BEARER token (BEARER is important here!)
+response:
+{
+  "success": true,
+  "data": {
+    "username": "johndoe",
+    "image": "https://your-api-endpoint.com/images/vite.svg", //if no image it will be sent null I will put placeholder
+    "bio": "A short bio here",
+    "balance": balance_value,
+    "email": "john.doe@example.com"
+  }
+}
+---------------------
+[HTTP POST]
+/login
+request: application/json without auth
+{
+    "email": email,
+    "password": password,
+}
+
+response: if 200
+{
+    "user_type": user_type as int 0->customer 1->bussiness, 2-> admin
+}
+-----------------------------
+[HTTP POST]
+/register_customer
+request: without auth
+{
+	"name":name,
+	"email":email,
+	"password": password,
+}
+reponse: 200OK or 400 Bad Request
+Profile image will be null and balance is 0 initially 
+---------------------------
+[HTTP POST]
+/register_bussiness
+request: without auth
+{
+	"bussiness_name": bussiness_name,
+	"email":email,
+	"password":password,
+	"IBAN":IBAN,
+}
+income is 0 initially
+reponse: 200OK or 400 Bad Request
