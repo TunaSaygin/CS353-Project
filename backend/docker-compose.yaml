@@ -9,7 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - marketplace-data:/var/lib/postgresql/data
-      - init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
   web:
     build:
       context: app
@@ -24,3 +24,6 @@ services:
       - POSTGRES_PASSWORD=${P_PASS}
     depends_on:
       - db
+volumes:
+  marketplace-data:
+    external: true
