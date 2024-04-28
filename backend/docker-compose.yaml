@@ -10,6 +10,11 @@ services:
     volumes:
       - marketplace-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: "pg_isready -U ${P_USER}"
+      interval: 5s
+      timeout: 5s
+      retries: 5
   web:
     build:
       context: app
@@ -23,7 +28,8 @@ services:
       - POSTGRES_USER=${P_USER}
       - POSTGRES_PASSWORD=${P_PASS}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 volumes:
   marketplace-data:
     external: true
