@@ -20,10 +20,12 @@ services:
       context: app
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
+      - ./app:/app
     ports:
       - "8000:8000"
     environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
       - POSTGRES_NAME=${P_DB}
       - POSTGRES_USER=${P_USER}
       - POSTGRES_PASSWORD=${P_PASS}
