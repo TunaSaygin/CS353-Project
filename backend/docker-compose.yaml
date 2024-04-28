@@ -11,14 +11,14 @@ services:
       - marketplace-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: "pg_isready -U ${P_USER}"
+      test: pg_isready -U ${P_USER}
       interval: 5s
       timeout: 5s
       retries: 5
-  web:
+  backend:
     build:
-      context: app
-    command: python manage.py runserver 0.0.0.0:8000
+      context: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./app:/app
     ports:
