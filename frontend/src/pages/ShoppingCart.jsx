@@ -18,40 +18,44 @@ export default function ShoppingCart() {
                         <Item name="Knitted sweater" price="10₺" count="4" />
                     </div>
                 </div>
-                <div className="col-md-6 d-flex justify-content-center">
-                    <div className="card-details">
-                        <h3 className="title">Credit Card Details</h3>
-                        <div className="row">
-                            <div className="form-group col-sm-8">
-                                <label htmlFor="card-holder">Card Holder</label>
-                                <input id="card-holder" type="text" className="form-control" placeholder="Card Holder" aria-label="Card Holder" aria-describedby="basic-addon1" />
-                                <label htmlFor="card-number">Card Number</label>
-                                <input id="card-number" type="text" className="form-control" placeholder="Card Number" aria-label="Card Holder" aria-describedby="basic-addon1" />
-                            </div>
-                            <div className="form-group col-sm-4 d-flex flex-column">
-                                <label htmlFor="cvc">CVC</label>
-                                <input id="cvc" type="text" className="form-control" placeholder="CVC" aria-label="Card Holder" aria-describedby="basic-addon1" />
-                                <label htmlFor="">Expiration Date</label>
-                                <div className="input-group expiration-date">
-                                    <input type="text" className="form-control" placeholder="MM" aria-label="MM" aria-describedby="basic-addon1" />
-                                    <span className="date-separator m-2">/</span>
-                                    <input type="text" className="form-control" placeholder="YY" aria-label="YY" aria-describedby="basic-addon1" />
-                                </div>
-                            </div>
-                            <div className="form-group col-sm-12">
-                                <button type="button" className="btn btn-primary btn-block">Proceed</button>
-                            </div>
-                        </div>
-                        {/* <div className="back-to-shop"><a href="#">&leftarrow;</a><span className="text-muted">Back to shop</span></div> */}
-                    </div>
-                </div>
-
-
-
-
+                <CreditCardDetails></CreditCardDetails>
             </div>
         </div>
 
+    );
+}
+
+function CreditCardDetails() {
+    return (
+        <>
+            <div className="col-md-6 d-flex justify-content-center">
+                <div className="card-details">
+                    <h3 className="title">Credit Card Details</h3>
+                    <div className="row">
+                        <div className="form-group col-sm-8">
+                            <label htmlFor="card-holder">Card Holder</label>
+                            <input id="card-holder" type="text" className="form-control" placeholder="Card Holder" aria-label="Card Holder" aria-describedby="basic-addon1" />
+                            <label htmlFor="card-number">Card Number</label>
+                            <input id="card-number" type="text" className="form-control" placeholder="Card Number" aria-label="Card Holder" aria-describedby="basic-addon1" />
+                        </div>
+                        <div className="form-group col-sm-4 d-flex flex-column">
+                            <label htmlFor="cvc">CVC</label>
+                            <input id="cvc" type="text" className="form-control" placeholder="CVC" aria-label="Card Holder" aria-describedby="basic-addon1" />
+                            <label htmlFor="">Expiration Date</label>
+                            <div className="input-group expiration-date">
+                                <input type="text" className="form-control" placeholder="MM" aria-label="MM" aria-describedby="basic-addon1" />
+                                <span className="date-separator m-2">/</span>
+                                <input type="text" className="form-control" placeholder="YY" aria-label="YY" aria-describedby="basic-addon1" />
+                            </div>
+                        </div>
+                        <div className="form-group col-sm-12">
+                            <button type="button" className="btn btn-primary btn-block">Proceed</button>
+                        </div>
+                    </div>
+                    {/* <div className="back-to-shop"><a href="#">&leftarrow;</a><span className="text-muted">Back to shop</span></div> */}
+                </div>
+            </div>
+        </>
     );
 }
 
@@ -60,7 +64,7 @@ function Item(props) {
     return (
         <div className="row border-top border-bottom">
             <div className="row main align-items-center">
-                <div className="col-2"><img className="img-fluid" src={image}></img></div>
+                <div className="col-2"><img className="img-fluid rounded-start rounded-end" src={image}></img></div>
                 <div className="col">
                     {/* <div className="row text-muted">Shirt</div> */}
                     <div className="row">{name}</div>

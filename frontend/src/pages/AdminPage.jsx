@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Table, InputGroup, FormControl, Container, Row, Col, Nav,Modal,Form } from 'react-bootstrap';
 import Dashboard from '../components/graph';
+import ProductDetail from './ProductDetail';
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('businesses');
   const [searchQuery, setSearchQuery] = useState('');
@@ -307,10 +308,10 @@ function ProductTable({products}){
       </Table>
       <Modal show={showModal} onHide={handleClose} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>Dashboard</Modal.Title>
+          <Modal.Title>Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h1>Sıla senin product detailin gelecek</h1>
+          <ProductDetail></ProductDetail>
         </Modal.Body>
       </Modal>
     </>

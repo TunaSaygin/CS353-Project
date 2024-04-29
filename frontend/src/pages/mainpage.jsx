@@ -1,6 +1,9 @@
 import React from "react";
 import image from '../../DB_html/assets/img/dogs/image3.jpeg';
+import { Modal } from "react-bootstrap";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ProductDetail from "./ProductDetail";
 
 export default function Mainpage() {
     return (
@@ -31,12 +34,13 @@ export default function Mainpage() {
 }
 
 function Product(props) {
-    const navigate = useNavigate();
-
+    const [show, setShow] = useState(false);
+    function hideModal() {
+        setShow(false);
+    }
     const handleDetails = (e) => {
         console.log("click");
-        e.preventDefault();
-        navigate("/product_detail");
+        setShow(true);
     }
     const { name, price } = props;
     return (
@@ -50,16 +54,6 @@ function Product(props) {
 
                             <div className="card-body">
                                 <h5 className="card-title">{name}</h5>
-                                {/* <p className="card-text">
-                                <span>100% cotton </span>
-                                <span>Light weight </span>
-                                <span>Best finish</span>
-                            </p> */}
-                                {/* <p className="card-text">
-                                <span>Unique design </span>
-                                <span>For men </span>
-                                <span>Casual</span>
-                            </p> */}
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h4 className="card-price">{price}</h4>
@@ -75,6 +69,14 @@ function Product(props) {
                     </div>
                 </div>
             </div>
+            <Modal show={show} onHide={hideModal} size="lg" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ProductDetail></ProductDetail>
+                </Modal.Body>
+            </Modal>
         </>
     );
 }
