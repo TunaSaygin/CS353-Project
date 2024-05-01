@@ -49,10 +49,28 @@ function RegistrationFormFields({ userType, handleRegistration }) {
       </Form.Group>
 
       {/* Add additional fields based on user type here */}
+      {userType === 'customer' && (
+        <Form.Group className="mb-3">
+          <Form.Label>Customer Name</Form.Label>
+          <Form.Control type="text" placeholder="Business name" />
+        </Form.Group>
+      )}
+      {userType === 'customer' && (
+        <Form.Group className="mb-3">
+          <Form.Label>Address</Form.Label>
+          <Form.Control as="textarea" rows={3} type="text" placeholder="Business name" />
+        </Form.Group>
+      )}
       {userType === 'business' && (
         <Form.Group className="mb-3">
           <Form.Label>Business Name</Form.Label>
           <Form.Control type="text" placeholder="Business name" />
+        </Form.Group>
+      )}
+      {userType === 'business' && (
+        <Form.Group className="mb-3">
+          <Form.Label>IBAN</Form.Label>
+          <Form.Control type="text" placeholder="IBAN" />
         </Form.Group>
       )}
       <Form.Group className="mb-3">
