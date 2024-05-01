@@ -74,7 +74,7 @@ function Product(props) {
                     <Modal.Title>Details</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <ProductDetail></ProductDetail>
+                    <ProductDetail hideButtons={false}></ProductDetail>
                 </Modal.Body>
             </Modal>
         </>
