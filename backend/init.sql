@@ -76,10 +76,11 @@ CREATE TABLE handcraftedgood (
 
 CREATE TABLE productphoto (
     p_id INT,
+    b_id INT,
     photo_metadata VARCHAR(100),
     photo_blob BYTEA,
-    PRIMARY KEY (p_id, photo_metadata),
-    FOREIGN KEY (p_id) REFERENCES handcraftedgood(p_id)
+    PRIMARY KEY (p_id, b_id, photo_metadata),
+    FOREIGN KEY (p_id, b_id) REFERENCES handcraftedgood(p_id, b_id)
 );
 
 CREATE TABLE belong (
