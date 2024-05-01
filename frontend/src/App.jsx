@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from './context/authcontext'
 import Profile from './pages/Profile'
 import Dashboard from './components/graph'
 import Wishlist from './pages/Wishlist'
+import ForgotPassword, { PasswordForm } from './pages/ForgotPassword'
 
 
 
@@ -46,7 +47,8 @@ function App() {
         <Route path="/home_business" element={<PrivateRoute><BussinessHome /></PrivateRoute>}/>
         <Route path="/home_customer" element={<PrivateRoute><CustomerHome /></PrivateRoute>}/>
         <Route path="/product_list" element={<Mainpage/>}/>
-        <Route path="/product_detail" element={<ProductDetail hideButtons={false}/>}/>
+        <Route path='/forgot_password' element={<ForgotPassword></ForgotPassword>}></Route>
+        <Route path='/enter_password' element={<PasswordForm></PasswordForm>}></Route>
         <Route path='/shopping_cart' element={<ShoppingCart/>}/>
         <Route path='/wishlist' element={<Wishlist/>}/>
         <Route path="*" element={<LoginForm />} />

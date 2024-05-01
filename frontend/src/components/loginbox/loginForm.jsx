@@ -11,7 +11,7 @@ export default function LoginFormComponent({handleForm}) {
                 <div className="mb-3">
                 <label htmlFor="loginPassword" className="form-label">Password</label>
                 <input type="password" className="form-control" id="loginPassword" placeholder="Password" />
-                <a>Forgot password?</a>
+                <a href='/forgot_password'>Forgot password?</a>
                 </div>
             <button type="submit" className="btn btn-primary">Login</button>
         </form>
