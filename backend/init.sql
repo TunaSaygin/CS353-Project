@@ -69,8 +69,8 @@ CREATE TABLE handcraftedgood (
     description VARCHAR(255),
     recipient_type VARCHAR(50),
     materials VARCHAR(50),
-    FOREIGN KEY (b_id) REFERENCES business(id),
-    PRIMARY KEY(b_id, p_id),
+    FOREIGN KEY (b_id) REFERENCES business(id) ON DELETE CASCADE,
+    PRIMARY KEY(p_id),
     CHECK( inventory >= 0 AND current_price > 0)
 );
 
@@ -79,8 +79,8 @@ CREATE TABLE productphoto (
     b_id INT,
     photo_metadata VARCHAR(100),
     photo_blob BYTEA,
-    PRIMARY KEY (p_id, b_id, photo_metadata),
-    FOREIGN KEY (p_id, b_id) REFERENCES handcraftedgood(p_id, b_id)
+    PRIMARY KEY (p_id, photo_metadata),
+    FOREIGN KEY (p_id) REFERENCES handcraftedgood(p_id)
 );
 
 CREATE TABLE belong (
