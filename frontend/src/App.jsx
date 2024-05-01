@@ -45,7 +45,7 @@ function App() {
         <Route path="/home_business" element={<PrivateRoute><BussinessHome /></PrivateRoute>}/>
         <Route path="/home_customer" element={<PrivateRoute><CustomerHome /></PrivateRoute>}/>
         <Route path="/product_list" element={<Mainpage/>}/>
-        <Route path="/product_detail" element={<ProductDetail/>}/>
+        <Route path="/product_detail" element={<ProductDetail hideButtons={false}/>}/>
         <Route path='/shopping_cart' element={<ShoppingCart/>}/>
         <Route path="*" element={<LoginForm />} />
       </Routes>

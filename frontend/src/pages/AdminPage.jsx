@@ -311,7 +311,7 @@ function ProductTable({products}){
           <Modal.Title>Details</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ProductDetail></ProductDetail>
+          <ProductDetail hideButtons={true}></ProductDetail>
         </Modal.Body>
       </Modal>
     </>
