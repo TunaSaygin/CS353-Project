@@ -29,12 +29,12 @@ def getProfile(request):
     serializer = ProfileSerializer(user, many=False)
     return Response(serializer.data)
 
-# @api_view(['PUT'])
-# @permission_classes([IsAuthenticated])
-# def updateProfile(request):
-#     user = request.user
-#     serializer = ProfileSerializer(user, data=request.data, partial=True)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateProfile(request):
+    user = request.user
+    serializer = ProfileSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
 
