@@ -13,6 +13,7 @@ import ProductDetail from './pages/ProductDetail'
 import { AuthProvider, useAuth } from './context/authcontext'
 import Profile from './pages/Profile'
 import Dashboard from './components/graph'
+import Wishlist from './pages/Wishlist'
 
 
 
@@ -47,6 +48,7 @@ function App() {
         <Route path="/product_list" element={<Mainpage/>}/>
         <Route path="/product_detail" element={<ProductDetail hideButtons={false}/>}/>
         <Route path='/shopping_cart' element={<ShoppingCart/>}/>
+        <Route path='/wishlist' element={<Wishlist/>}/>
         <Route path="*" element={<LoginForm />} />
       </Routes>
       </BrowserRouter>
