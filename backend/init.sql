@@ -164,3 +164,17 @@ SELECT a.id, p.name, r.report_id, r.description, r.report_time
 FROM admin a
 JOIN profile p ON a.id = p.id
 JOIN report r ON a.id = r.admin_id;
+
+INSERT INTO profile (name, email, password)
+VALUES
+('Tuna', 'adminTuna@example.com', '123'),
+('Sila', 'adminSila@example.com', '123'),
+('Ece', 'adminEce@example.com', '123'),
+('Burhan', 'adminBurhan@example.com', '123'),
+('Isil', 'adminIsil@example.com', '123');
+
+WITH profile_ids AS (
+    SELECT id FROM profile
+)
+INSERT INTO admin (id)
+SELECT id FROM profile_ids;
