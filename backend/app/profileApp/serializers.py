@@ -3,6 +3,8 @@ from .models import Profile
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
+from django.db import connection
+from django.contrib.auth.hashers import make_password
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -30,17 +32,21 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'email', 'password', 'image_metadata', 'image_blob')
 
     def create(self, validated_data):
-        user = Profile.objects.create(
-            name=validated_data['name'],
-            email=validated_data['email'],
-            image_metadata=validated_data.get('image_metadata', None),
-            image_blob=validated_data.get('image_blob', None)
-        )
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO app_profile (name, email, password, image_metadata, image_blob)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, [
+                validated_data['name'],
+                validated_data['email'],
+                make_password(validated_data['password']),  # make_password is used to hash the password
+                validated_data.get('image_metadata', None),
+                validated_data.get('image_blob', None)
+            ])
+            row = cursor.fetchone()
 
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
+        return Profile.objects.get(id=row[0])  # Fetch the newly created user
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:

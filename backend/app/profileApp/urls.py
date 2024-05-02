@@ -1,15 +1,17 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import MyTokenObtainPairView, RegisterView, getProfile, updateProfile
+
+from backend.app.activityApp import views
+
 
 urlpatterns = [
     #Authentication
-    path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('register/', RegisterView.as_view(), name='auth_register'),
+    path('register/', views.RegisterView.as_view(), name='auth_register'),
 
     #Profile
-    path('profilePage/', getProfile, name='profile'),
-    path('profile/update/', updateProfile, name='update-profile'),
+    path('profilePage/', views.getProfile, name='profile'),
+    path('profile/update/', views.updateProfile, name='update-profile'),
 ]
