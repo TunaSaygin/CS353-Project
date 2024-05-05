@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
 import './navbar.css';
 import { useAuth } from '../../context/authcontext';
-import { Dropdown, Nav } from 'react-bootstrap';
+import { Dropdown, Nav, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import CreditCardDetails from '../../pages/CreditCardForm';
 
 export default function Navbar() {
   const { isLoggedIn, logout } = useAuth(); // Use the useAuth hook
+  const [show, setShow] = useState(false);
   const nav = useNavigate();
   const handleLogout = () => {
     logout();
     nav("/login");
   };
-  const handleProfile = () =>{
+  const handleProfile = () => {
     nav("/profile");
+  }
+  function hideModal() {
+    setShow(false);
+  }
+  function handleBalance() {
+    setShow(true);
   }
   const [profile, setProfile] = useState({
     username: 'johndoe',
@@ -22,6 +30,7 @@ export default function Navbar() {
     email: 'john.doe@example.com',
   });
   return (
+    <>
     <nav className="navbar navbar-expand-lg navbar-light bg-light p-3">
       <div className="container-fluid">
         <a className="navbar-brand" href="#">BrandName</a>
@@ -35,9 +44,9 @@ export default function Navbar() {
                 <li className="nav-item px-2">
                   <Dropdown>
                     <Dropdown.Toggle variant='success' id="notifications-dropdown">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{width:'40px',height:'40px'}}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                    </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '40px', height: '40px' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                      </svg>
 
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
@@ -47,7 +56,7 @@ export default function Navbar() {
                   </Dropdown>
                 </li>
                 <li className='nav-item px-2'>
-                  <Nav.Link href="/#" className='my-auto'>Add Balance</Nav.Link>
+                  <Nav.Link onClick={handleBalance} className='my-auto'>Add Balance</Nav.Link>
                 </li>
                 <li className="nav-item">
                   <Dropdown>
@@ -85,5 +94,14 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    <Modal show={show} onHide={hideModal} size="lg" centered>
+    <Modal.Header closeButton>
+        <Modal.Title>Add Balance</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        <CreditCardDetails hideButtons={false}></CreditCardDetails>
+    </Modal.Body>
+</Modal>
+</>
   );
 }
