@@ -3,7 +3,7 @@
 CREATE TABLE profile (
     id SERIAL PRIMARY KEY,
     name VARCHAR(80) NOT NULL,
-    email VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(50) NOT NULL,
     image_metadata VARCHAR(100),
     image_blob BYTEA
