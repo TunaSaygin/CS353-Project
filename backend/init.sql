@@ -2,7 +2,7 @@
 -- todo fill api calls according to table
 CREATE TABLE profile (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(80) NOT NULL,
+    name VARCHAR(80) UNIQUE NOT NULL,
     email VARCHAR(64) UNIQUE NOT NULL,
     password VARCHAR(50) NOT NULL,
     image_metadata VARCHAR(100),
