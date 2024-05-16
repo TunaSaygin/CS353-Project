@@ -10,7 +10,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from django.db import connection
 import jwt
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.db import transaction
 from profileApp.custom_permission import CustomPermission
@@ -204,3 +204,55 @@ def updateProfile(request):
         return Response(profile_data)
     else:
         return Response(serializer.errors, status=400)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def verify_business(request):
+    if request.method == 'POST':
+        try:
+            data = request.data
+            
+            business_id = data.get('business_id')
+            admin_id = data.get('admin_id') 
+            
+            if not business_id or not admin_id:
+                return Response({'error': 'business_id and admin_id are required'}, status=400)
+            
+            verification_date = date.today()
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE business
+                    SET verifying_admin = %s, verification_date = %s
+                    WHERE id = %s
+                """, [admin_id, verification_date, business_id])
+            
+            return Response({'message': 'Business verified successfully'}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_unverified_businesses(request):
+    if request.method == 'GET':
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT * FROM business
+                    WHERE verifying_admin IS NULL
+                """)
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+                businesses = [
+                    dict(zip(columns, row))
+                    for row in rows
+                ]
+            
+            return Response(businesses, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
