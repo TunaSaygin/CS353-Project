@@ -1,4 +1,6 @@
-from django.db import connection
+from datetime import date
+
+from django.db import connection, transaction
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -112,35 +114,50 @@ def add_to_cart(request):
 
 @api_view(['POST'])
 def purchase(request):
-    # Extracting customer ID and payment details from request data
-    customer_id = request.data.get('customer_id')
+    try:
+        with transaction.atomic():
+            # Extracting customer ID and payment details from request data
+            customer_id = request.data.get('customer_id')
+            balance = 0
+            cart_total = 0
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT balance FROM customer WHERE id = %s", [customer_id])
+                balance_row = cursor.fetchone()
+                if balance_row:
+                    balance = balance_row[0]
+                else:
+                    return Response({'error': 'Customer not found'}, status=404)
 
-    #check the balance of user
-    balance=0
-    cart_total=0
-    if balance>cart_total:
-        print("good")
-    else:
-        return Response({'error': 'insufficient funds'}, status=404)
+                # Fetching products from the shopping cart
+                cursor.execute("""
+                    SELECT h.p_id, h.current_price, s.quantity
+                    FROM shoppingcart s
+                    INNER JOIN handcraftedgood h ON s.p_id = h.p_id
+                    WHERE s.c_id = %s
+                """, [customer_id])
+                cart_items = cursor.fetchall()
 
-    # Fetching products from the shopping cart
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT p_id, quantity FROM shoppingcart WHERE c_id = %s
-        """, [customer_id])
-        cart_items = cursor.fetchall()
+                # Calculating the total cost of items in the shopping cart
+                cart_total = sum(item[1] * item[2] for item in cart_items)
 
-        # Adding purchased items to the customer's purchased list
-        for item in cart_items:
-            cursor.execute("""
-                INSERT INTO purchase (c_id, p_id, quantity)
-                VALUES (%s, %s, %s)
-            """, [customer_id, item[0], item[1]])
+                if balance < cart_total:
+                    return Response({'error': 'Insufficient funds'}, status=404)
 
-        # Clearing the shopping cart after purchase
-        cursor.execute("""
-            DELETE FROM shoppingcart WHERE c_id = %s
-        """, [customer_id])
+                # Inserting purchase records into the purchase table
+                purchase_records = []
+                for item in cart_items:
+                    purchase_records.append((customer_id, item[0], date.today(), item[1] * item[2], None))
+                    #todo check timestamp
 
-    return Response({'message': 'Purchase completed successfully'}, status=200)
+                cursor.executemany("""
+                    INSERT INTO purchase (c_id, p_id, p_date, p_price, return_date)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, purchase_records)
+
+                # Clearing the shopping cart after purchase
+                cursor.execute("DELETE FROM shoppingcart WHERE c_id = %s", [customer_id])
+
+        return Response({'message': 'Purchase completed successfully'}, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 #Todo: balance arttırma yeri lazım
