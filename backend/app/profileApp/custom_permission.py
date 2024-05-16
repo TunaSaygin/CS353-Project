@@ -4,6 +4,19 @@ from rest_framework.response import Response
 from django.conf import settings
 import jwt
 
+
+def get_uid(request):
+    if 'Authorization' in request.headers:
+        try:
+            token = request.headers['Authorization'].split(' ')[1]  # Extract token from header
+            return jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])['user_id']
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
+    return None
+
+
 class CustomPermission(BasePermission):
     def has_permission(self, request, view):
         if 'Authorization' in request.headers:
@@ -30,5 +43,5 @@ class CustomPermission(BasePermission):
                 return None
         except jwt.ExpiredSignatureError:
             return None  # Token has expired
-        except (jwt.InvalidTokenError):
+        except jwt.InvalidTokenError:
             return None  # Invalid token or user not found

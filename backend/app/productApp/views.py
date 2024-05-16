@@ -1,16 +1,20 @@
 from django.shortcuts import render
 from django.db import connection
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from backend.app.profileApp.custom_permission import CustomPermission, get_uid
+
+
 # Create your views here.
+@permission_classes([CustomPermission])
 @api_view(['POST'])
 def create_product(request):
     if request.method == 'POST':
         try:
             data = request.data
             
-            b_id = data.get('b_id')
+            b_id = get_uid(request)
             inventory = data.get('inventory')
             current_price = data.get('current_price')
             name = data.get('name')
