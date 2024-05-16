@@ -1,5 +1,4 @@
 from django.shortcuts import render
-# from rest_framework_simplejwt.views import TokenObtainPairView
 # from .serializers import MyTokenObtainPairSerializer
 from rest_framework import generics
 from rest_framework.decorators import api_view
@@ -11,9 +10,10 @@ from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from django.db import connection
 import jwt
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.db import transaction
+from profileApp.custom_permission import CustomPermission
 
 # Create your views here.
 #Login User
@@ -138,20 +138,30 @@ def custom_login(request):
 
 #api/profile  and api/profile/update
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([CustomPermission])
 def getProfile(request):
-    user = request.user
-    serializer = ProfileSerializer(user, many=False)
-    if serializer.is_valid():
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM profile
-                WHERE user_id = %s
-            """, [user.id])
-            profile_data = cursor.fetchone()
-        return Response(profile_data)
-    else:
-        return Response(serializer.errors, status=400)
+    # user = request.data.get('user')
+    # serializer = ProfileSerializer(user, many=False)
+    # if serializer.is_valid():
+    #     with connection.cursor() as cursor:
+    #         cursor.execute("""
+    #             SELECT * FROM profile
+    #             WHERE user_id = %s
+    #         """, [user.id])
+    #         profile_data = cursor.fetchone()
+    #     return Response(profile_data)
+    # else:
+    #     return Response(serializer.errors, status=400)
+    username = request.data.get('name')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, name, email, image_metadata, image_blob FROM profile WHERE name = %s", [username])
+        row = cursor.fetchone()
+        if row:
+            user_id = row[0]
+            email = row[2]
+            return Response({'name': username, 'id': user_id, 'email': email}, status=200)
+        return Response({'error': 'Error'}, status=404)
+            
 
 # @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])
@@ -163,7 +173,7 @@ def getProfile(request):
 #     return Response(serializer.data)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([CustomPermission])
 def updateProfile(request):
     user = request.user
     serializer = ProfileSerializer(user, data=request.data, partial=True)
@@ -190,8 +200,59 @@ def updateProfile(request):
                 WHERE user_id = %s
             """, [user.id])
             profile_data = cursor.fetchone()
-
         # Returning updated profile data
         return Response(profile_data)
     else:
         return Response(serializer.errors, status=400)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def verify_business(request):
+    if request.method == 'POST':
+        try:
+            data = request.data
+            
+            business_id = data.get('business_id')
+            admin_id = data.get('admin_id') 
+            
+            if not business_id or not admin_id:
+                return Response({'error': 'business_id and admin_id are required'}, status=400)
+            
+            verification_date = date.today()
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE business
+                    SET verifying_admin = %s, verification_date = %s
+                    WHERE id = %s
+                """, [admin_id, verification_date, business_id])
+            
+            return Response({'message': 'Business verified successfully'}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_unverified_businesses(request):
+    if request.method == 'GET':
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT * FROM business
+                    WHERE verifying_admin IS NULL
+                """)
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+                businesses = [
+                    dict(zip(columns, row))
+                    for row in rows
+                ]
+            
+            return Response(businesses, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    

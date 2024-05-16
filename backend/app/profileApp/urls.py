@@ -5,7 +5,9 @@ from profileApp.views import(
     getProfile,
     updateProfile,
     custom_login,
-    custom_register
+    custom_register,
+    verify_business,
+    get_unverified_businesses
 )
 
 
@@ -15,6 +17,8 @@ urlpatterns = [
     # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', custom_register, name='auth_register'),
     path('login', custom_login, name='auth_login'),
+    path('verify-business', verify_business, name='verify_business'),
+    path('get-unverified-businesses/', get_unverified_businesses, name='get_unverified_bus'),
 
     #Profile
     path('profilePage/', getProfile, name='profile'),

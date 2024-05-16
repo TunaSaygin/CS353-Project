@@ -17,7 +17,7 @@ services:
     build:
       context: backend
     working_dir: /app
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8080"
+    command: sh -c "python manage.py runserver 0.0.0.0:8080"
     volumes:
       - ./backend/app:/app
     ports:
