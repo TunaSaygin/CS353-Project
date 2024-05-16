@@ -14,6 +14,7 @@ import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.db import transaction
+from profileApp.custom_permission import CustomPermission
 
 # Create your views here.
 #Login User
@@ -138,20 +139,30 @@ def custom_login(request):
 
 #api/profile  and api/profile/update
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([CustomPermission])
 def getProfile(request):
-    user = request.user
-    serializer = ProfileSerializer(user, many=False)
-    if serializer.is_valid():
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM profile
-                WHERE user_id = %s
-            """, [user.id])
-            profile_data = cursor.fetchone()
-        return Response(profile_data)
-    else:
-        return Response(serializer.errors, status=400)
+    # user = request.data.get('user')
+    # serializer = ProfileSerializer(user, many=False)
+    # if serializer.is_valid():
+    #     with connection.cursor() as cursor:
+    #         cursor.execute("""
+    #             SELECT * FROM profile
+    #             WHERE user_id = %s
+    #         """, [user.id])
+    #         profile_data = cursor.fetchone()
+    #     return Response(profile_data)
+    # else:
+    #     return Response(serializer.errors, status=400)
+    username = request.data.get('name')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, name, email, image_metadata, image_blob FROM profile WHERE name = %s", [username])
+        row = cursor.fetchone()
+        if row:
+            user_id = row[0]
+            email = row[2]
+            return Response({'name': username, 'id': user_id, 'email': email}, status=200)
+        return Response({'error': 'Error'}, status=404)
+            
 
 # @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])
@@ -163,7 +174,7 @@ def getProfile(request):
 #     return Response(serializer.data)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([CustomPermission])
 def updateProfile(request):
     user = request.user
     serializer = ProfileSerializer(user, data=request.data, partial=True)
@@ -190,7 +201,6 @@ def updateProfile(request):
                 WHERE user_id = %s
             """, [user.id])
             profile_data = cursor.fetchone()
-
         # Returning updated profile data
         return Response(profile_data)
     else:
