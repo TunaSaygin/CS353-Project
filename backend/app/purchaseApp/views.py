@@ -42,7 +42,7 @@ def list_all_products(request):
     return Response(products)
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def view_product(request):
     # Extracting selected product ID from request data
     selected_pid = request.data.get('selected_pid')
