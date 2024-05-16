@@ -3,14 +3,15 @@ from django.urls import include, path
 
 from productApp.views import(
     create_product,
-    get_all_products
+    add_product_photo
 )
 
 
 urlpatterns = [
    
     path('createProduct/', create_product, name='create_product'),
-    path('products/', get_all_products, name='all_products'),
+    path('add-product-photo/', add_product_photo, name='add_product_photo'),
+    
     
 
 ]
