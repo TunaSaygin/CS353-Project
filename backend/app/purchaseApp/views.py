@@ -84,7 +84,12 @@ def view_product(request):
         """, [selected_pid, selected_pid])
         product_details = cursor.fetchone()
 
-    return Response(product_details)
+        if product_details:
+            return Response(product_details)
+        else:
+            return Response({'error': 'there is not enough product on the inventory'}, status=404)
+
+
 
 
 @api_view(['POST'])
@@ -109,12 +114,14 @@ def add_to_cart(request):
 def purchase(request):
     # Extracting customer ID and payment details from request data
     customer_id = request.data.get('customer_id')
-    payment_method = request.data.get('payment_method')
 
-    # Assuming the payment is successful and updating the purchased list
-    # You should implement actual payment processing logic here
-    # For demonstration purposes, let's assume the payment is successful
-    # and add the purchased product to the customer's purchased list
+    #check the balance of user
+    balance=0
+    cart_total=0
+    if balance>cart_total:
+        print("good")
+    else:
+        return Response({'error': 'insufficient funds'}, status=404)
 
     # Fetching products from the shopping cart
     with connection.cursor() as cursor:
@@ -126,7 +133,7 @@ def purchase(request):
         # Adding purchased items to the customer's purchased list
         for item in cart_items:
             cursor.execute("""
-                INSERT INTO purchased (c_id, p_id, quantity)
+                INSERT INTO purchase (c_id, p_id, quantity)
                 VALUES (%s, %s, %s)
             """, [customer_id, item[0], item[1]])
 
@@ -135,4 +142,5 @@ def purchase(request):
             DELETE FROM shoppingcart WHERE c_id = %s
         """, [customer_id])
 
-    return Response({'message': 'Purchase completed successfully'})
+    return Response({'message': 'Purchase completed successfully'}, status=200)
+#Todo: balance arttırma yeri lazım

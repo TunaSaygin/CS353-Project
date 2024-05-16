@@ -95,7 +95,7 @@ CREATE TABLE purchase (
     p_id INT,
     p_date TIMESTAMP NOT NULL,
     p_price DECIMAL NOT NULL,
-    return_date TIMESTAMP NOT NULL,
+    return_date TIMESTAMP,
     FOREIGN KEY (c_id) REFERENCES customer(id),
     FOREIGN KEY (p_id) REFERENCES handcraftedgood(p_id),
     PRIMARY KEY (c_id, p_id, p_date),
