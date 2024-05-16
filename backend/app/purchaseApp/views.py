@@ -2,17 +2,45 @@ from django.db import connection
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+
 @api_view(['GET'])
 def list_all_products(request):
-    # Applying filters if necessary (product type, price range, business name etc.)
-    # Assuming no filters for now, listing all products
+    # Extracting filter parameters from the request
+    product_type = request.query_params.get('product_type')
+    min_price = request.query_params.get('min_price')
+    max_price = request.query_params.get('max_price')
+    business_name = request.query_params.get('business_name')
+
+    # Constructing the SQL query dynamically based on the provided filters
+    query = """
+        SELECT * FROM handcraftedgood
+        WHERE 1=1
+    """
+    params = []
+
+    if product_type:
+        query += " AND product_type = %s"
+        params.append(product_type)
+
+    if min_price:
+        query += " AND current_price >= %s"
+        params.append(min_price)
+
+    if max_price:
+        query += " AND current_price <= %s"
+        params.append(max_price)
+
+    if business_name:
+        query += " AND business_name = %s"
+        params.append(business_name)
+
     with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT * FROM handcraftedgood
-        """)
+        cursor.execute(query, params)
         products = cursor.fetchall()
-    #TODO: serialize?
+
+    # TODO: Serialize the products before returning the response
     return Response(products)
+
 
 @api_view(['POST'])
 def view_product(request):
@@ -41,6 +69,7 @@ def view_product(request):
 
     return Response(product_details)
 
+
 @api_view(['POST'])
 def add_to_cart(request):
     # Extracting customer ID, product ID, and quantity from request data
@@ -57,6 +86,7 @@ def add_to_cart(request):
         """, [customer_id, product_id, quantity, quantity])
 
     return Response({'message': 'Product added to cart successfully'})
+
 
 @api_view(['POST'])
 def purchase(request):
