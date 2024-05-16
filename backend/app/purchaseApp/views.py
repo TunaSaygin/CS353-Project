@@ -9,31 +9,48 @@ def list_all_products(request):
     product_type = request.query_params.get('product_type')
     min_price = request.query_params.get('min_price')
     max_price = request.query_params.get('max_price')
-    business_name = request.query_params.get('business_name')
+    business_id = request.query_params.get('business_id')
 
-    # Constructing the SQL query dynamically based on the provided filters
+    # Constructing the base SQL query
     query = """
-        SELECT * FROM handcraftedgood
+        SELECT hg.*
+        FROM handcraftedgood hg
+    """
+
+    # Constructing the JOIN clause based on the presence of business_id filter
+    if business_id:
+        query += """
+            JOIN business b ON hg.b_id = b.id
+        """
+
+    if product_type:
+        query += """
+            JOIN belong bl ON hg.p_id = bl.p_id
+        """
+
+    # Constructing the WHERE clause based on the provided filters
+    query += """
         WHERE 1=1
     """
     params = []
 
     if product_type:
-        query += " AND product_type = %s"
+        query += " AND bl.category_id = %s"
         params.append(product_type)
 
     if min_price:
-        query += " AND current_price >= %s"
+        query += " AND hg.current_price >= %s"
         params.append(min_price)
 
     if max_price:
-        query += " AND current_price <= %s"
+        query += " AND hg.current_price <= %s"
         params.append(max_price)
 
-    if business_name:
-        query += " AND business_name = %s"
-        params.append(business_name)
+    if business_id:
+        query += " AND b.id = %s"
+        params.append(business_id)
 
+    # Executing the SQL query with the constructed parameters
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         products = cursor.fetchall()
