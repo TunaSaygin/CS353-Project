@@ -1,9 +1,9 @@
-from rest_framework import serializers
-from .models import Profile
-from django.contrib.auth.password_validation import validate_password
-from rest_framework.validators import UniqueValidator
-from django.db import connection
-from django.contrib.auth.hashers import make_password
+# from rest_framework import serializers
+# from .models import Profile
+# from django.contrib.auth.password_validation import validate_password
+# from rest_framework.validators import UniqueValidator
+# from django.db import connection
+# from django.contrib.auth.hashers import make_password
 
 # class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 #     @classmethod
@@ -56,7 +56,7 @@ from django.contrib.auth.hashers import make_password
 #                 }
 #                 return Profile(**profile_data)
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = '__all__'
+# class ProfileSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Profile
+#         fields = '__all__'
