@@ -7,8 +7,9 @@ from profileApp.custom_permission import CustomPermission, get_uid
 
 
 # Create your views here.
-@permission_classes([CustomPermission])
+
 @api_view(['POST'])
+@permission_classes([CustomPermission])
 def create_product(request):
     if request.method == 'POST':
         try:
@@ -35,8 +36,9 @@ def create_product(request):
     else:
         return Response({'error': 'Invalid request method'}, status=405)
     
-@permission_classes([CustomPermission])
+
 @api_view(['POST'])
+@permission_classes([CustomPermission])
 def add_product_photo(request):
     if request.method == 'POST':
         try:

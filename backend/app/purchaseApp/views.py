@@ -1,11 +1,13 @@
 from datetime import date
 
 from django.db import connection, transaction
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from profileApp.custom_permission import CustomPermission, get_uid
 
 
 @api_view(['GET'])
+@permission_classes([CustomPermission])
 def list_all_products(request):
     # Extracting filter parameters from the request
     product_type = request.query_params.get('product_type')
@@ -62,6 +64,7 @@ def list_all_products(request):
 
 
 @api_view(['GET'])
+@permission_classes([CustomPermission])
 def view_product(request):
     # Extracting selected product ID from request data
     selected_pid = request.data.get('selected_pid')
@@ -95,6 +98,7 @@ def view_product(request):
 
 
 @api_view(['POST'])
+@permission_classes([CustomPermission])
 def add_to_cart(request):
     # Extracting customer ID, product ID, and quantity from request data
     customer_id = request.data.get('customer_id')
@@ -113,6 +117,7 @@ def add_to_cart(request):
 
 
 @api_view(['POST'])
+@permission_classes([CustomPermission])
 def purchase(request):
     try:
         with transaction.atomic():
@@ -161,3 +166,101 @@ def purchase(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 #Todo: balance arttırma yeri lazım
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def add_to_wishlist(request):
+    try:
+        user_id = get_uid(request)
+        
+        p_id = request.data.get('p_id')
+
+        if not p_id:
+            return Response({'error': 'Product ID is required'}, status=400)
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO wishlist (c_id, p_id)
+                VALUES (%s, %s)
+                ON CONFLICT (c_id, p_id) DO NOTHING
+            """, [user_id, p_id])
+
+            cursor.execute("""
+                SELECT * FROM wishlist
+                WHERE c_id = %s
+            """, [user_id])
+            rows = cursor.fetchall()
+
+            columns = [col[0] for col in cursor.description]
+
+            wishlist = [dict(zip(columns, row)) for row in rows]
+
+        return Response(wishlist, status=201)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    
+@api_view(['DELETE'])
+@permission_classes([CustomPermission])
+def delete_from_wishlist(request):
+    try:
+        user_id = get_uid(request)
+        
+        # Extracting data from the request
+        p_id = request.data.get('p_id')
+
+        if not p_id:
+            return Response({'error': 'Product ID is required'}, status=400)
+
+        with connection.cursor() as cursor:
+            # Delete from wishlist
+            cursor.execute("""
+                DELETE FROM wishlist
+                WHERE c_id = %s AND p_id = %s
+            """, [user_id, p_id])
+
+            # Check if the deletion was successful
+            cursor.execute("""
+                SELECT COUNT(*) FROM wishlist
+                WHERE c_id = %s AND p_id = %s
+            """, [user_id, p_id])
+            count = cursor.fetchone()[0]
+
+        if count == 0:
+            return Response({'message': 'Product removed from wishlist successfully'}, status=200)
+        else:
+            return Response({'error': 'Failed to remove product from wishlist'}, status=400)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_wishlist(request):
+    try:
+        user_id = get_uid(request)
+
+        with connection.cursor() as cursor:
+            # Fetch all products in the user's wishlist
+            cursor.execute("""
+                SELECT w.c_id, w.p_id, p.name, p.current_price, p.description 
+                FROM wishlist w
+                JOIN handcraftedgood p ON w.p_id = p.p_id
+                WHERE w.c_id = %s
+            """, [user_id])
+            rows = cursor.fetchall()
+
+            # If no rows are returned, return an empty list
+            if not rows:
+                return Response([], status=200)
+
+            # Get column names
+            columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the wishlist
+            wishlist = [dict(zip(columns, row)) for row in rows]
+
+        return Response(wishlist, status=200)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
