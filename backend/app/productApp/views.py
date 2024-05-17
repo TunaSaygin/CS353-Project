@@ -99,7 +99,7 @@ def return_product(request):
 @permission_classes([CustomPermission])
 def upload_product_photo(request):
     p_id = request.POST.get('p_id')
-    b_id = request.POST.get('b_id')
+    b_id = get_uid(request)
     photo_metadata = request.POST.get('photo_metadata')
     file = request.FILES.get('file')
 

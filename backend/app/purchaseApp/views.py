@@ -264,3 +264,34 @@ def get_wishlist(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_purchase_history(request):
+    if request.method == 'GET':
+        try:
+            # Get customer ID from the request
+            c_id = get_uid(request)
+            with connection.cursor() as cursor:
+                # Fetch purchase history for the given customer ID
+                cursor.execute("SELECT * FROM purchase WHERE c_id = %s", [c_id])
+                result = cursor.fetchall()
+
+            # Assuming your purchase table has columns: p_id, c_id, p_date, return_date, etc.
+            purchases = [
+                {
+                    'p_id': row[0],
+                    'c_id': row[1],
+                    'p_date': row[2],
+                    'return_date': row[3],
+                    # Add other columns as needed
+                } 
+                for row in result
+            ]
+
+            return Response({'purchases': purchases}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
