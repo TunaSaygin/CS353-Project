@@ -23,4 +23,5 @@ urlpatterns = [
     #Profile
     path('profilePage/', getProfile, name='profile'),
     path('profile/update/', updateProfile, name='update-profile'),
+    
 ]
