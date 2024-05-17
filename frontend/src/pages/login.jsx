@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 export default function LoginForm() {
   const [formType, setFormType] = useState('login'); // login or register
   const [accountType, setAccountType] = useState('customer'); // customer, business, admin
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("")
   const nav = useNavigate();
   const {login} = useAuth();
   const handleSubmit = (event) => {
     event.preventDefault();
     // Placeholder for submit logic
-    login();
+    login(username,password);
     nav("/admin_page")
     console.log(`Submitted ${formType} form for ${accountType} account.`);
     // You'd put your login or registration logic here
@@ -39,7 +41,7 @@ export default function LoginForm() {
           </div>
           <div className="form-container">
           <div className={`form-slide ${formType === 'login' ? 'form-slide-active' : 'form-slide-left'}`}>
-            <LoginFormComponent handleForm={handleSubmit}/>
+            <LoginFormComponent handleForm={handleSubmit} setPassword={setPassword} setUsername={setUsername}/>
           </div>
           <div className={`form-slide ${formType === 'register' ? 'form-slide-active' : 'form-slide-right'}`}>
             <RegisterForm/>

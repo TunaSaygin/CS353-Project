@@ -21,7 +21,8 @@ import ForgotPassword, { PasswordForm } from './pages/ForgotPassword'
 // Authentication check function (placeholder)
 const isAuthenticated = () => {
   // Replace with actual authentication check
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
+  console.log(`user = ${user}`)
   return isLoggedIn !== false;
 };
 
