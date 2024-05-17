@@ -86,24 +86,24 @@ def custom_register(request):
 
 @api_view(['POST'])
 def custom_login(request):
-    username = request.data.get('name')
+    email = request.data.get('email')
     password = request.data.get('password')
-    print(username)
+    print(email)
     print(password)
 
     # Raw SQL query to fetch user data by username
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, name, password
+            SELECT id, email, password
             FROM profile
-            WHERE name = %s
-        """, [username])
+            WHERE email = %s
+        """, [email])
         user_row = cursor.fetchone()
         print("user row",user_row)
         if user_row:
-            user_id, db_username, db_password = user_row
+            user_id, db_email, db_password = user_row
             # user = Profile.objects.get(pk=user_id)
-            if password==db_password and username == db_username:
+            if password==db_password and email == db_email:
                 payload = {
                     'user_id': user_id,
                     'exp': datetime.utcnow() + timedelta(days=1)
@@ -116,7 +116,7 @@ def custom_login(request):
                         """, [user_id])
                 cus = cursor.fetchone()
                 if cus:
-                    return Response({'token': token, 'id': cus[0], 'name': username, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer'})
+                    return Response({'token': token, 'id': cus[0], 'name': email, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer'})
                 
                 cursor.execute("""
                             SELECT id, income, IBAN
@@ -125,7 +125,7 @@ def custom_login(request):
                         """, [user_id])
                 bus = cursor.fetchone()
                 if bus:
-                    return Response({'token': token, 'id': bus[0], 'name': username, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business'})
+                    return Response({'token': token, 'id': bus[0], 'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business'})
                 cursor.execute("SELECT id FROM admin WHERE id = %s", [user_id])
                 admin = cursor.fetchone()
                 if admin:
