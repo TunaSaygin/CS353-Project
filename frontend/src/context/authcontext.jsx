@@ -18,8 +18,8 @@ export const AuthProvider = ({ children }) => {
       // Log the response data separately
       console.log('response.data:', response.data);
   
-      const { token, id, name, acc_type } = response.data;
-      console.log(`token = ${token}`)
+      const { token, id, email, acc_type } = response.data;
+      console.log(acc_type);
       // Save the token and user data in local storage
       setIsLoggedIn(true);
       setUser(response.data);
@@ -42,8 +42,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setIsLoggedIn(false);
     window.localStorage.removeItem('isLoggedIn'); // Optional: Clear login state
+    window.localStorage.clear();
     setIsLoggedIn(false);
     setUser(null);
+    console.log("in logout");
   };
   const value = useMemo(()=>({isLoggedIn,user, login,logout, baseUrl}))
   return (

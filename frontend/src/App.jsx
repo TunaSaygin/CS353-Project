@@ -21,10 +21,10 @@ import ForgotPassword, { PasswordForm } from './pages/ForgotPassword'
 // Authentication check function (placeholder)
 const isAuthenticated = () => {
   // Replace with actual authentication check
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   console.log(`isLoggedIn = ${isLoggedIn}, user = ${user}`);
-  console.log(`user = ${user}`)
-  return user !== null;
+  console.log(`user in isauth = ${user}`)
+  return isLoggedIn !== false;
 };
 
 // PrivateRoute component

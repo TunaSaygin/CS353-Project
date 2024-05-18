@@ -12,10 +12,14 @@ export default function LoginForm() {
   const [password, setPassword] = useState("")
   const nav = useNavigate();
   const {login,user} = useAuth();
-  const handleSubmit = (event) => {
+
+  async function handleSubmit(event) {
     event.preventDefault();
     // Placeholder for submit logic
-    login(username,password);
+    const res = await login(username,password);
+    if(res.error) {
+      console.log("error during login");
+    }
     // const {user} = useAuth();
     // console.log(user)
     // if(user){

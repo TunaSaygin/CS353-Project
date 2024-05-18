@@ -80,7 +80,7 @@ def custom_register(request):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     
-    return Response({'token': token, 'name': username, 'id': id}, status=200)
+    return Response({'token': token, 'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
 
 
@@ -131,7 +131,7 @@ def custom_login(request):
                 cursor.execute("SELECT id FROM admin WHERE id = %s", [user_id])
                 admin = cursor.fetchone()
                 if admin:
-                    return Response({'token': token, 'id': user_id, 'acc_type': 'admin', 'name':user_name})
+                    return Response({'token': token, 'id': user_id, 'email': email, 'acc_type': 'admin', 'name':user_name})
                 return Response({'error': 'Account type needed'}, status=400)
            
             else:
