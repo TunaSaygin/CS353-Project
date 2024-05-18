@@ -80,7 +80,7 @@ def custom_register(request):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     
-    return Response({'token': token, 'email': email, 'id': id, 'acc_type': acc_type}, status=200)
+    return Response({'token': token,'name':username ,'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
 
 
