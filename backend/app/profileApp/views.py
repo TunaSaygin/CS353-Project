@@ -94,14 +94,16 @@ def custom_login(request):
     # Raw SQL query to fetch user data by username
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, email, password
+            SELECT id, email, password, image_metadata,name
             FROM profile
             WHERE email = %s
         """, [email])
         user_row = cursor.fetchone()
         print("user row",user_row)
         if user_row:
-            user_id, db_email, db_password = user_row
+            user_id, db_email, db_password, image_name,user_name = user_row
+            print(image_name)
+            print(user_row)
             # user = Profile.objects.get(pk=user_id)
             if password==db_password and email == db_email:
                 payload = {
@@ -116,7 +118,7 @@ def custom_login(request):
                         """, [user_id])
                 cus = cursor.fetchone()
                 if cus:
-                    return Response({'token': token, 'id': cus[0], 'name': email, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer'})
+                    return Response({'token': token, 'id': cus[0],'email':email ,'name': user_name, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer','image_name':image_name})
                 
                 cursor.execute("""
                             SELECT id, income, IBAN
@@ -125,11 +127,11 @@ def custom_login(request):
                         """, [user_id])
                 bus = cursor.fetchone()
                 if bus:
-                    return Response({'token': token, 'id': bus[0], 'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business'})
+                    return Response({'token': token, 'id': bus[0], 'name':user_name ,'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business', 'image_name':image_name})
                 cursor.execute("SELECT id FROM admin WHERE id = %s", [user_id])
                 admin = cursor.fetchone()
                 if admin:
-                    return Response({'token': token, 'id': user_id, 'acc_type': 'admin'})
+                    return Response({'token': token, 'id': user_id, 'acc_type': 'admin', 'name':user_name})
                 return Response({'error': 'Account type needed'}, status=400)
            
             else:

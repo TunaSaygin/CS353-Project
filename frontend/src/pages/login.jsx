@@ -11,12 +11,27 @@ export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("")
   const nav = useNavigate();
-  const {login} = useAuth();
+  const {login,user} = useAuth();
   const handleSubmit = (event) => {
     event.preventDefault();
     // Placeholder for submit logic
     login(username,password);
-    nav("/admin_page")
+    // const {user} = useAuth();
+    // console.log(user)
+    // if(user){
+    //   if(user.acc_type === "admin"){
+    //     nav("/admin_page")
+    //   }
+    //   else if(user.acc_type === "customer"){
+    //     nav("/home_customer")
+    //   }
+    //   else if(user.acc_type === "business"){
+    //     nav("home_bussiness")
+    //   }
+    // }
+    // else{
+    //   console.log("Failed user is null")
+    // }
     console.log(`Submitted ${formType} form for ${accountType} account.`);
     // You'd put your login or registration logic here
   };
