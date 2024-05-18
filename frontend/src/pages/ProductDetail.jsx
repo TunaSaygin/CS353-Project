@@ -3,7 +3,7 @@ import img1 from '../../DB_html/assets/img/dogs/image1.jpeg';
 import img2 from '../../DB_html/assets/img/dogs/image2.jpeg';
 import img3 from '../../DB_html/assets/img/dogs/image3.jpeg';
 
-export default function ProductDetail({hideButtons}) {
+export default function ProductDetail({hideButtons, id}) {
     return (
         <div className="container mt-5 mb-5">
             <div className="row justify-content-center">

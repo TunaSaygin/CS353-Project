@@ -14,6 +14,7 @@ def list_all_products(request):
     min_price = request.query_params.get('min_price')
     max_price = request.query_params.get('max_price')
     business_id = request.query_params.get('business_id')
+    search_str = request.query_params.get('search_str')
 
     # Constructing the base SQL query
     query = """
@@ -39,24 +40,28 @@ def list_all_products(request):
     params = []
 
     if product_type:
-        query += " AND bl.category_id = %s"
-        params.append(product_type)
+        query += " AND bl.category_id = {}".format(product_type)
+        #params.append(product_type)
 
     if min_price:
-        query += " AND hg.current_price >= %s"
-        params.append(min_price)
+        query += " AND hg.current_price >= {}".format(min_price)
+        #params.append(min_price)
 
     if max_price:
-        query += " AND hg.current_price <= %s"
-        params.append(max_price)
+        query += " AND hg.current_price <= {}".format(max_price)
+        #params.append(max_price)
 
     if business_id:
-        query += " AND b.id = %s"
-        params.append(business_id)
+        query += " AND b.id = {}".format(business_id)
+        #params.append(business_id)
+    
+    if search_str:
+        query += " AND hg.name LIKE '%{}%'".format(search_str)
+        #params.append(search_str)
 
     # Executing the SQL query with the constructed parameters
     with connection.cursor() as cursor:
-        cursor.execute(query, params)
+        cursor.execute(query)
         products = cursor.fetchall()
 
     # TODO: Serialize the products before returning the response
