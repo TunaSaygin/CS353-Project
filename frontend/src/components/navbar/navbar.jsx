@@ -64,7 +64,7 @@ export default function Navbar() {
                       <div className="d-flex">
                         {user.image_name ?  
                         <img
-                        src={`${baseUrl}/profile/image/${user.image_name}`} // Your profile image URL
+                        src={`${baseUrl}/profile/image/${user.image_name}/`} // Your profile image URL
                         className="rounded-circle"
                         alt="Profile"
                         style={{ width: '30px', height: '30px', objectFit: 'cover' }}

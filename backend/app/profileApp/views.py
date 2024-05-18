@@ -1,3 +1,4 @@
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 # from .serializers import MyTokenObtainPairSerializer
 # from rest_framework import generics
@@ -14,6 +15,9 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.db import transaction
 from profileApp.custom_permission import CustomPermission
+import uuid
+import mimetypes
+import psycopg2
 from profileApp.custom_permission import get_uid
 
 # Create your views here.
@@ -80,7 +84,7 @@ def custom_register(request):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     
-    return Response({'token': token, 'email': email, 'id': id, 'acc_type': acc_type}, status=200)
+    return Response({'token': token,'name':username ,'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
 
 
@@ -325,3 +329,56 @@ def get_gift_cards_of_customer(request):
             print(rows)
             return Response({'rows': rows}, status=200)
     return Response({'error': 'Customer has no gift cards'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def upload_profile_photo(request):
+    user_id = get_uid(request)
+    file = request.FILES.get('file')
+
+    if not file:
+        return Response({'error': 'No file provided'}, status=400)
+    file_extension = file.name.split('.')[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    photo_metadata = unique_filename
+    photo_blob = file.read()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE profile
+                SET image_metadata = %s, image_blob = %s
+                WHERE id = %s
+            """, (photo_metadata, psycopg2.Binary(photo_blob), user_id))
+
+            connection.commit()
+            cursor.close()
+        return Response({'message': 'Image successfully uploaded'}, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+@api_view(['GET'])    
+def view_profile_photo(request,image_metadata):
+    print(image_metadata)
+    try:
+        print("I am here!")
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT image_blob, image_metadata FROM profile
+                WHERE image_metadata = %s
+            """, (image_metadata,))
+            print("cursor executed")
+            result = cursor.fetchone()
+            cursor.close()
+            print("retrieved")
+        if result is None:
+                return Response('Image not found', status=404)
+
+        photo_blob, photo_metadata = result
+
+        # Determine the MIME type of the file based on its extension
+        mime_type, _ = mimetypes.guess_type(photo_metadata)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'  # Use a binary stream type if MIME type is unknown
+        print("The mime type is",mime_type)
+        return HttpResponse(photo_blob, content_type=mime_type)
+    except Exception as e:
+        return Response(f'Error retrieving image: {str(e)}', status=500)
