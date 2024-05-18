@@ -35,7 +35,8 @@ class ProductPhoto(models.Model):
     class Meta:
         managed = False
         db_table = 'productphoto'
-
+        unique_together = (('p_id', 'photo_metadata'),)
+        
 class Belong(models.Model):
     category_id = models.IntegerField()
     p_id = models.IntegerField()

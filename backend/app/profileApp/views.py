@@ -1,18 +1,20 @@
 from django.shortcuts import render
 # from .serializers import MyTokenObtainPairSerializer
-from rest_framework import generics
+# from rest_framework import generics
 from rest_framework.decorators import api_view
-from .models import Profile
-from .serializers import ProfileSerializer
-from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
+# from .models import Profile
+# from .serializers import ProfileSerializer
+# from rest_framework.permissions import AllowAny
+# from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from rest_framework.response import Response
 from django.db import connection
 import jwt
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.db import transaction
+from profileApp.custom_permission import CustomPermission
+from profileApp.custom_permission import get_uid
 
 # Create your views here.
 #Login User
@@ -78,30 +80,32 @@ def custom_register(request):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     
-    return Response({'token': token, 'name': username, 'id': id}, status=200)
+    return Response({'token': token, 'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
 
 
 @api_view(['POST'])
 def custom_login(request):
-    username = request.data.get('name')
+    email = request.data.get('email')
     password = request.data.get('password')
-    print(username)
+    print(email)
     print(password)
 
     # Raw SQL query to fetch user data by username
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, name, password
+            SELECT id, email, password, image_metadata,name
             FROM profile
-            WHERE name = %s
-        """, [username])
+            WHERE email = %s
+        """, [email])
         user_row = cursor.fetchone()
         print("user row",user_row)
         if user_row:
-            user_id, db_username, db_password = user_row
+            user_id, db_email, db_password, image_name,user_name = user_row
+            print(image_name)
+            print(user_row)
             # user = Profile.objects.get(pk=user_id)
-            if password==db_password and username == db_username:
+            if password==db_password and email == db_email:
                 payload = {
                     'user_id': user_id,
                     'exp': datetime.utcnow() + timedelta(days=1)
@@ -114,7 +118,7 @@ def custom_login(request):
                         """, [user_id])
                 cus = cursor.fetchone()
                 if cus:
-                    return Response({'token': token, 'id': cus[0], 'name': username, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer'})
+                    return Response({'token': token, 'id': cus[0],'email':email ,'name': user_name, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer','image_name':image_name})
                 
                 cursor.execute("""
                             SELECT id, income, IBAN
@@ -123,11 +127,11 @@ def custom_login(request):
                         """, [user_id])
                 bus = cursor.fetchone()
                 if bus:
-                    return Response({'token': token, 'id': bus[0], 'name': username, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business'})
+                    return Response({'token': token, 'id': bus[0], 'name':user_name ,'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business', 'image_name':image_name})
                 cursor.execute("SELECT id FROM admin WHERE id = %s", [user_id])
                 admin = cursor.fetchone()
                 if admin:
-                    return Response({'token': token, 'id': user_id, 'acc_type': 'admin'})
+                    return Response({'token': token, 'id': user_id, 'email': email, 'acc_type': 'admin', 'name':user_name})
                 return Response({'error': 'Account type needed'}, status=400)
            
             else:
@@ -137,20 +141,30 @@ def custom_login(request):
 
 #api/profile  and api/profile/update
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([CustomPermission])
 def getProfile(request):
-    user = request.user
-    serializer = ProfileSerializer(user, many=False)
-    if serializer.is_valid():
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM profile
-                WHERE user_id = %s
-            """, [user.id])
-            profile_data = cursor.fetchone()
-        return Response(profile_data)
-    else:
-        return Response(serializer.errors, status=400)
+    # user = request.data.get('user')
+    # serializer = ProfileSerializer(user, many=False)
+    # if serializer.is_valid():
+    #     with connection.cursor() as cursor:
+    #         cursor.execute("""
+    #             SELECT * FROM profile
+    #             WHERE user_id = %s
+    #         """, [user.id])
+    #         profile_data = cursor.fetchone()
+    #     return Response(profile_data)
+    # else:
+    #     return Response(serializer.errors, status=400)
+    username = request.data.get('name')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, name, email, image_metadata, image_blob FROM profile WHERE name = %s", [username])
+        row = cursor.fetchone()
+        if row:
+            user_id = row[0]
+            email = row[2]
+            return Response({'name': username, 'id': user_id, 'email': email}, status=200)
+        return Response({'error': 'Error'}, status=404)
+            
 
 # @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])
@@ -161,36 +175,153 @@ def getProfile(request):
 #         serializer.save()
 #     return Response(serializer.data)
 
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def updateProfile(request):
-    user = request.user
-    serializer = ProfileSerializer(user, data=request.data, partial=True)
+# @api_view(['PUT'])
+# @permission_classes([CustomPermission])
+# def updateProfile(request):
+#     user = request.user
+#     serializer = ProfileSerializer(user, data=request.data, partial=True)
     
-    if serializer.is_valid():
-        # Extracting data from serializer
-        validated_data = serializer.validated_data
-        first_name = validated_data.get('first_name')
-        last_name = validated_data.get('last_name')
-        # Add other fields as needed
+#     if serializer.is_valid():
+#         # Extracting data from serializer
+#         validated_data = serializer.validated_data
+#         first_name = validated_data.get('first_name')
+#         last_name = validated_data.get('last_name')
+#         # Add other fields as needed
 
-        # Raw SQL query to update user profile
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                UPDATE profile
-                SET first_name = %s, last_name = %s
-                WHERE user_id = %s
-            """, [first_name, last_name, user.id])
+#         # Raw SQL query to update user profile
+#         with connection.cursor() as cursor:
+#             cursor.execute("""
+#                 UPDATE profile
+#                 SET first_name = %s, last_name = %s
+#                 WHERE user_id = %s
+#             """, [first_name, last_name, user.id])
 
-        # Fetch updated profile data
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM profile
-                WHERE user_id = %s
-            """, [user.id])
-            profile_data = cursor.fetchone()
+#         # Fetch updated profile data
+#         with connection.cursor() as cursor:
+#             cursor.execute("""
+#                 SELECT * FROM profile
+#                 WHERE user_id = %s
+#             """, [user.id])
+#             profile_data = cursor.fetchone()
+#         # Returning updated profile data
+#         return Response(profile_data)
+#     else:
+#         return Response(serializer.errors, status=400)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def verify_business(request):
+    if request.method == 'POST':
+        try:
+            data = request.data
+            
+            business_id = data.get('business_id')
+            admin_id = data.get('admin_id') 
+            
+            if not business_id or not admin_id:
+                return Response({'error': 'business_id and admin_id are required'}, status=400)
+            
+            verification_date = date.today()
 
-        # Returning updated profile data
-        return Response(profile_data)
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE business
+                    SET verifying_admin = %s, verification_date = %s
+                    WHERE id = %s
+                """, [admin_id, verification_date, business_id])
+            
+            return Response({'message': 'Business verified successfully'}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
     else:
-        return Response(serializer.errors, status=400)
+        return Response({'error': 'Invalid request method'}, status=405)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_unverified_businesses(request):
+    if request.method == 'GET':
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT * FROM business
+                    WHERE verifying_admin IS NULL
+                """)
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+                businesses = [
+                    dict(zip(columns, row))
+                    for row in rows
+                ]
+            
+            return Response(businesses, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
+
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def generate_gift_card(request):
+    b_id = get_uid(request)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM business WHERE id = %s", [b_id])
+        row = cursor.fetchone()
+        if row:
+            gift_amount = request.data.get('gift_amount')
+            gift_message = request.data.get('gift_message')
+            cursor.execute("SELECT p.c_id FROM purchase p JOIN handcraftedgood h ON p.p_id = h.p_id AND h.b_id = %s ORDER BY RANDOM() LIMIT 1", [b_id])
+            c_id = cursor.fetchone()
+            print(c_id)
+            if c_id:
+                cursor.execute("INSERT INTO giftcard (cust_id, business_id, gift_amount, gift_message, creation_date) VALUES (%s,%s,%s,%s,%s) RETURNING gift_id, cust_id, creation_date", [c_id, b_id, gift_amount, gift_message, datetime.now()])
+                r = cursor.fetchone()
+                return Response({'gift_id': r[0], 'cust_id': r[1], 'creation_date': r[2]}, status=201)
+            else:
+                return Response({'error': 'No customer purchased your products'}, status=404)
+        else:
+            return Response({'error': 'Invalid business id. You are not allowed.'}, status=403)
+    
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def redeem_gift_card(request):
+    c_id = get_uid(request)
+    gift_id = request.data.get('gift_id')
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT gift_id FROM giftcard WHERE cust_id = %s AND gift_id = %s AND redemption_date is NULL", [c_id, gift_id])
+        row = cursor.fetchone()
+        if row:
+            cursor.execute("BEGIN TRANSACTION")
+            cursor.execute("UPDATE giftcard SET redemption_date = %s WHERE gift_id = %s RETURNING redemption_date, gift_amount", [datetime.now(), gift_id])
+            r1 = cursor.fetchone()
+            if r1:
+                gift_amount = r1[1]
+                print(r1)
+                cursor.execute("UPDATE customer SET balance = balance + %s WHERE id = %s RETURNING id, balance", [gift_amount, c_id])
+                r2 = cursor.fetchone()
+                if r2:
+                    print("balance", r2[1])
+                    cursor.execute("END TRANSACTION")
+                    return Response({'customer_id': c_id, 'gift_amount': gift_amount, 'gift_id': gift_id}, status=200)
+                else:
+                    return Response({'error': 'Error updating customer table'}, status=500)
+            else:
+                return Response({'error': 'Error updating the giftcard table'}, status=500)
+        else:
+            return Response({'error': 'Error getting the gift card'}, status=404)
+        
+            
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_gift_cards_of_customer(request):
+    c_id = get_uid(request)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM giftcard WHERE cust_id = %s AND redemption_date is NULL", [c_id])
+        rows = cursor.fetchall()
+        if rows:
+            print(rows)
+            return Response({'rows': rows}, status=200)
+    return Response({'error': 'Customer has no gift cards'}, status=404)

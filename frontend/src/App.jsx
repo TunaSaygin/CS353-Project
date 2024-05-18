@@ -21,7 +21,9 @@ import ForgotPassword, { PasswordForm } from './pages/ForgotPassword'
 // Authentication check function (placeholder)
 const isAuthenticated = () => {
   // Replace with actual authentication check
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
+  console.log(`isLoggedIn = ${isLoggedIn}, user = ${user}`);
+  console.log(`user in isauth = ${user}`)
   return isLoggedIn !== false;
 };
 
@@ -34,8 +36,8 @@ const PrivateRoute = ({ children }) => {
 function App() {
   return (
     <>
-    <AuthProvider> {/* Wrap your routes with AuthProvider */}
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider> {/* Wrap your routes with AuthProvider */}
       <Navbar />
       <Routes>
         <Route path="/home_cust" element={<CustomerHome />} />
@@ -45,7 +47,7 @@ function App() {
         <Route path='/admin_page' element={<PrivateRoute><AdminPage/></PrivateRoute>}/>
         <Route path='/profile' element={<PrivateRoute><Profile/></PrivateRoute>} />
         <Route path="/home_business" element={<PrivateRoute><BusinessHome /></PrivateRoute>}/>
-        <Route path="/home_customer" element={<PrivateRoute><CustomerHome /></PrivateRoute>}/>
+        <Route path="/home_customer" element={<PrivateRoute><Mainpage /></PrivateRoute>}/>
         <Route path="/product_list" element={<Mainpage/>}/>
         <Route path='/forgot_password' element={<ForgotPassword></ForgotPassword>}></Route>
         <Route path='/enter_password' element={<PasswordForm></PasswordForm>}></Route>
@@ -53,8 +55,8 @@ function App() {
         <Route path='/wishlist' element={<Wishlist/>}/>
         <Route path="*" element={<LoginForm />} />
       </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
     </>
   )
 }

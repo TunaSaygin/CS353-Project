@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import CreditCardDetails from '../../pages/CreditCardForm';
 
 export default function Navbar() {
-  const { isLoggedIn, logout } = useAuth(); // Use the useAuth hook
+  const { isLoggedIn, logout, user, baseUrl } = useAuth(); // Use the useAuth hook
   const [show, setShow] = useState(false);
   const nav = useNavigate();
   const handleLogout = () => {
@@ -23,7 +23,7 @@ export default function Navbar() {
     setShow(true);
   }
   const [profile, setProfile] = useState({
-    username: 'johndoe',
+    // username: 'johndoe',
     image: 'vite.svg',
     balance: 100,
     bio: 'A short bio here',
@@ -62,15 +62,22 @@ export default function Navbar() {
                   <Dropdown>
                     <Dropdown.Toggle variant="success" id="profile-dropdown" className="d-flex justify-content-center align-items-center ">
                       <div className="d-flex">
+                        {user.image_name ?  
                         <img
+                        src={`${baseUrl}/profile/image/${user.image_name}`} // Your profile image URL
+                        className="rounded-circle"
+                        alt="Profile"
+                        style={{ width: '30px', height: '30px', objectFit: 'cover' }}
+                      />
+                        :<img
                           src={profile.image} // Your profile image URL
                           className="rounded-circle"
                           alt="Profile"
                           style={{ width: '30px', height: '30px', objectFit: 'cover' }}
-                        />
+                        />}
                         <div className="ms-2 align-items-center flex-column align-items-start justify-content-center text-left">
-                          <div>{profile.username}</div> {/* User's name */}
-                          <div className="text-muted" style={{ fontSize: '0.8em' }}>balance: ${profile.balance}</div> {/* User's balance */}
+                          <div>{user.name}</div> {/* User's name */}
+                          <div className="text-muted" style={{ fontSize: '0.8em' }}>balance: ${user.balance}</div> {/* User's balance */}
                         </div>
                       </div>
                     </Dropdown.Toggle>
