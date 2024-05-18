@@ -45,9 +45,9 @@ export default function RegistrationForm() {
           <Nav.Item>
             <Nav.Link eventKey="business">Business</Nav.Link>
           </Nav.Item>
-          <Nav.Item>
+          {/* <Nav.Item>
             <Nav.Link eventKey="admin">Admin</Nav.Link>
-          </Nav.Item>
+          </Nav.Item> */}
         </Nav>
 
         <Tab.Content>
@@ -73,24 +73,15 @@ function RegistrationFormFields({ userType, handleRegistration, handleChange, fo
         <Form.Label>Email address</Form.Label>
         <Form.Control type="email" name='email' placeholder="Enter email" value={formData.email} onChange={handleChange} />
       </Form.Group>
-
+      <Form.Group className="mb-3">
+        <Form.Label>Name</Form.Label>
+        <Form.Control type="text" name='name' placeholder="Enter name" value={formData.name} onChange={handleChange} />
+      </Form.Group>
       {/* Add additional fields based on user type here */}
-      {userType === 'customer' && (
-        <Form.Group className="mb-3">
-          <Form.Label>Customer Name</Form.Label>
-          <Form.Control type="text" name='name' placeholder="Customer name" />
-        </Form.Group>
-      )}
       {userType === 'customer' && (
         <Form.Group className="mb-3">
           <Form.Label>Address</Form.Label>
           <Form.Control as="textarea" rows={3} type="text" name="delivery_address" placeholder="Enter address" value={formData.delivery_address} onChange={handleChange} />
-        </Form.Group>
-      )}
-      {userType === 'business' && (
-        <Form.Group className="mb-3">
-          <Form.Label>Business Name</Form.Label>
-          <Form.Control type="text" name='name' placeholder="Business name" value={formData.name} onChange={handleChange}/>
         </Form.Group>
       )}
       {userType === 'business' && (

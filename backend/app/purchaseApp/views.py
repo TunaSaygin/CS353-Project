@@ -18,10 +18,13 @@ def list_all_products(request):
 
     # Constructing the base SQL query
     query = """
-        SELECT hg.*
+        SELECT hg.*, photo_name.photo_metadata
         FROM handcraftedgood hg
+        LEFT JOIN (
+            SELECT p_id, photo_metadata
+            FROM productphoto
+        ) AS photo_name ON hg.p_id = photo_name.p_id
     """
-
     # Constructing the JOIN clause based on the presence of business_id filter
     if business_id:
         query += """

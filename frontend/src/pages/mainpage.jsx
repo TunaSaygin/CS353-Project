@@ -73,7 +73,7 @@ export default function Mainpage() {
             <div className="container mt-5 mb-5">
                 <div className="row justify-content-center">
                     {products.map((product) => (
-                        <Product key={product[1]} name={product[4]} price={product[3]} id={product[1]}/>
+                        <Product key={product[1]} name={product[4]} price={product[3]} id={product[1]} image_name = {product[9]}/>
                     ))}
                 </div>
             </div>
@@ -82,6 +82,7 @@ export default function Mainpage() {
 }
 
 function Product(props) {
+    const imageURL = "http://localhost:8080/product/photo/"
     const [show, setShow] = useState(false);
 
     function hideModal() {
@@ -92,7 +93,7 @@ function Product(props) {
         setShow(true);
     }
 
-    const { name, price, id } = props;
+    const { name, price, id, image_name } = props;
 
     return (
         <>
@@ -100,7 +101,9 @@ function Product(props) {
                 <div className="card col-md-9">
                     <div className="row-md-6">
                         <div>
-                            <img src={image} className="img-fluid rounded-start rounded-end" alt="product" />
+                            {image_name? <img src={`${imageURL}${image_name}/`} className="img-fluid rounded-start rounded-end" alt="product" />
+                            :
+                            <img src={image} className="img-fluid rounded-start rounded-end" alt="product" />}
                             <div className="card-body">
                                 <h5 className="card-title">{name}</h5>
                                 <div className="d-flex justify-content-between align-items-center">
