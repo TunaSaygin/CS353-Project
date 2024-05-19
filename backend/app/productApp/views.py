@@ -34,14 +34,43 @@ def create_product(request):
                 cursor.execute("""
                     INSERT INTO handcraftedgood (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING p_id
                 """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
-            
-            return Response({'message': 'Product created successfully'}, status=201)
+                p_id = cursor.fetchone()[0]
+            return Response({'message': 'Product created successfully','p_id': p_id}, status=201)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_product(request):
+    if request.method == 'POST':
+        try:
+            data = request.data
 
+            p_id = data.get('p_id')
+            b_id = get_uid(request)
+            inventory = data.get('inventory')
+            current_price = data.get('current_price')
+            name = data.get('name')
+            return_period = data.get('return_period')
+            description = data.get('description')
+            recipient_type = data.get('recipient_type')
+            materials = data.get('materials')
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE handcraftedgood
+                    SET inventory = %s, current_price = %s, name = %s, return_period = %s, description = %s, recipient_type = %s, materials = %s
+                    WHERE p_id = %s AND b_id = %s
+                """, [inventory, current_price, name, return_period, description, recipient_type, materials, p_id, b_id])
+            
+            return Response({'message': 'Product updated successfully'}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def add_product_photo(request):
@@ -100,13 +129,10 @@ def return_product(request):
 def upload_product_photo(request):
     p_id = request.POST.get('p_id')
     b_id = get_uid(request)
-    photo_metadata = request.POST.get('photo_metadata')
     file = request.FILES.get('file')
 
     if not file:
         return Response({'error': 'No file provided'}, status=400)
-    if not photo_metadata:
-        return Response({'error':'No photomedata provided'}, status=400)
     file_extension = file.name.split('.')[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     photo_metadata = unique_filename
@@ -124,6 +150,47 @@ def upload_product_photo(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_product_photo(request):
+    p_id = request.POST.get('p_id')
+    b_id = get_uid(request)
+    file = request.FILES.get('file')
+
+    if not file:
+        return Response({'error': 'No file provided'}, status=400)
+    file_extension = file.name.split('.')[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    photo_metadata = unique_filename
+    photo_blob = file.read()
+
+    try:
+        with connection.cursor() as cursor:
+            # Check if the photo exists
+            cursor.execute("""
+                SELECT photo_metadata FROM productphoto WHERE p_id = %s AND b_id = %s
+            """, (p_id, b_id))
+            existing_photo = cursor.fetchone()
+
+            if existing_photo:
+                # Update existing photo
+                cursor.execute("""
+                    UPDATE productphoto
+                    SET photo_metadata = %s, photo_blob = %s
+                    WHERE p_id = %s AND b_id = %s
+                """, (photo_metadata, psycopg2.Binary(photo_blob), p_id, b_id))
+            else:
+                # Insert new photo
+                cursor.execute("""
+                    INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob)
+                    VALUES (%s, %s, %s, %s)
+                """, (p_id, b_id, photo_metadata, psycopg2.Binary(photo_blob)))
+
+            connection.commit()
+            cursor.close()
+        return Response({'message': 'Image successfully uploaded/updated'}, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @api_view(['GET'])
 def view_product_photo(request,photo_metadata):

@@ -12,7 +12,7 @@ export default function Profile() {
     // bio: 'A short bio here',
     email: 'john.doe@example.com',
   });
-
+  
   const [pastPurchases, setPastPurchases] = useState([
     // Mock data for past purchases
     { id: 1, title: "Purchase 1", date: "2023-01-01", isReturned:true },

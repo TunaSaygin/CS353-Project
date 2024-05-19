@@ -8,15 +8,17 @@ from .views import (
     upload_product_photo,
     view_product_photo,
     product_rating,
-    get_product_rating_details
+    get_product_rating_details,
+    update_product,
+    update_product_photo
 )
 
 urlpatterns = [
 
     path('createProduct/', create_product, name='create_product'),
     path('add-product-photo/', add_product_photo, name='add_product_photo'),
-    
-    
+    path('update-product/', update_product, name='update_product'),
+    path('update-photo/', update_product_photo, name='update_product_photo'),
     #path('products/', get_all_products, name='all_products')
     path('returnProduct', return_product, name='return_product'),
     path('upload_photo', upload_product_photo, name='upload_product_photo'),

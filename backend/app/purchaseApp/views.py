@@ -73,6 +73,25 @@ def list_all_products(request):
 
 @api_view(['GET'])
 @permission_classes([CustomPermission])
+def get_business_products(request):
+    business_id = get_uid(request)
+     # Fetching details of the selected product
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT h.p_id, h.name, h.current_price, h.inventory, photo_name.photo_metadata
+            FROM handcraftedgood h
+            LEFT JOIN (
+                SELECT p_id, photo_metadata
+                FROM productphoto
+            ) AS photo_name ON h.p_id = photo_name.p_id
+            WHERE h.b_id = %s
+        """, [business_id,])
+        columns = [col[0] for col in cursor.description]
+        products = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return Response(products)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
 def view_product(request):
     # Extracting selected product ID from request data
     selected_pid = request.data.get('selected_pid')
