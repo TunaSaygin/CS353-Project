@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [productData,setProductData] = useState([]);
   const [customerData,setCustomerData] = useState([])
   const [transactionData, setTransactionData] = useState([])
+  const [categoryData,setCategoryData] = useState([])
   const {user, baseUrl} = useAuth()
   useEffect(() => {
     const fetchBusinessData = async () => {
@@ -51,10 +52,19 @@ export default function AdminPage() {
         console.error('Error fetching transaction data:', error);
       }
     };
+    const fetchCategoryData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/product/list-categories/`);
+        setCategoryData(response.data);
+      } catch (error) {
+        console.error('Error fetching category data:', error);
+      }
+    };
     fetchBusinessData();
     fetchProductData();
     fetchCustomerData();
     fetchTransactionData();
+    fetchCategoryData();
   }, [baseUrl]);
   const reports = [
     { name: 'Admin1', date: '2023-04-21'},
@@ -79,13 +89,13 @@ export default function AdminPage() {
   //   { name: 'Gourmet Coffee Beans', inventory: 300, sold: 250, price: '$12.99', category: 'Food', business: 'Aroma Brew' },
   //   { name: 'LED Desk Lamp', inventory: 50, sold: 100, price: '$45.99', category: 'Furniture', business: 'BrightLife' }
   // ];
-  const categoryData = [
-    { name: 'Electronics', totalProducts: 320, image: 'imageURL1' },
-    { name: 'Clothing', totalProducts: 150, image: 'imageURL2' },
-    { name: 'Home & Garden', totalProducts: 215, image: 'imageURL3' },
-    { name: 'Toys & Games', totalProducts: 89, image: 'imageURL4' },
-    { name: 'Sports', totalProducts: 78, image: 'imageURL5' }
-  ];
+  // const categoryData = [
+  //   { name: 'Electronics', totalProducts: 320, image: 'imageURL1' },
+  //   { name: 'Clothing', totalProducts: 150, image: 'imageURL2' },
+  //   { name: 'Home & Garden', totalProducts: 215, image: 'imageURL3' },
+  //   { name: 'Toys & Games', totalProducts: 89, image: 'imageURL4' },
+  //   { name: 'Sports', totalProducts: 78, image: 'imageURL5' }
+  // ];
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -161,7 +171,7 @@ export default function AdminPage() {
       {activeTab === 'categories' && (
         <Row>
           <Col>
-           <CategoryTable categories={categoryData} />
+           <CategoryTable categories={categoryData} setCategoryData = {setCategoryData}/>
           </Col>
         </Row>
       )}
@@ -356,12 +366,14 @@ function ProductTable({products}){
     </>
   );
 }
-function CategoryTable({categories}){
+function CategoryTable({categories, setCategoryData}){
+  const {baseUrl} = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
-
-  const handleView = () => {
+  const [selectedCategory,setSelectedCategory] = useState(null);
+  const handleView = (category = null) => {
     setModalContent('Update Category');
+    setSelectedCategory(category);
     setShowModal(true);
   };
 
@@ -374,13 +386,64 @@ function CategoryTable({categories}){
     setShowModal(false);
   };
   const [name, setName] = useState('');
-  const [image, setImage] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (modalContent === 'Add Category'){
+      addCategory(name);
+    }
+    else if(modalContent === 'Update Category'){
+      updateCategory(selectedCategory.category_id,name);
+    }
     onSave({ name, image });
   };
-
+  const addCategory = async (categoryName) => {
+    try {
+      const response = await axios.post(`${baseUrl}/product/add-category/`, {
+        category_name: categoryName,
+      });
+      console.log('Category added:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
+  
+  // Method to update an existing category
+  const updateCategory = async (categoryId, categoryName) => {
+    try {
+      const response = await axios.post(`${baseUrl}/product/update-category/`, {
+        category_id: categoryId,
+        category_name: categoryName,
+      });
+      console.log('Category updated:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
+  
+  // Method to delete a category
+  const deleteCategory = async (categoryId) => {
+    try {
+      const response = await axios.delete(`${baseUrl}/product/delete-category/`, {
+        data: { category_id: categoryId },
+      });
+      console.log('Category deleted:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
 
   return(
     <>
@@ -397,15 +460,12 @@ function CategoryTable({categories}){
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td>{category.name}</td>
-              <td>{category.totalProducts}</td>
-              <td>
-                <img src={category.image} alt={category.name} style={{ width: '50px', height: '50px' }} />
-              </td>
+              <td>{category.category_name}</td>
+              <td>0</td>
               <td>
                 <div>
                   <Button variant="outline-primary" onClick={() => handleView(category)}>Update</Button>
-                  <Button variant="outline-primary" onClick={handleView}>Delete</Button>
+                  <Button variant="outline-primary" onClick={()=>{handleDelete(category.category_id)}}>Delete</Button>
                 </div>
               </td>
             </tr>
@@ -425,16 +485,6 @@ function CategoryTable({categories}){
           placeholder="Enter category name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </Form.Group>
-      <Form.Group className="mb-3">
-        <Form.Label>Image URL</Form.Label>
-        <Form.Control
-          type="text"
-          placeholder="Enter image URL"
-          value={image}
-          onChange={(e) => setImage(e.target.value)}
           required
         />
       </Form.Group>

@@ -80,9 +80,11 @@ export default function BusinessHome() {
         formData.append('file', imageFile);
       }
 
+      console.log("isUpdating",isUpdating, "/selectedProduct",selectedProduct)
       if (isUpdating && selectedProduct) {
         // Update the product
         formData.append('p_id', selectedProduct.p_id);
+        console.log("formdata",formData)
         await axios.post(`http://localhost:8080/product/update-product/`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -91,10 +93,7 @@ export default function BusinessHome() {
 
         // Update the product photo if imageFile is available
         if (imageFile) {
-          const photoFormData = new FormData();
-          photoFormData.append('p_id', selectedProduct.p_id);
-          photoFormData.append('file', imageFile);
-          await axios.post('http://localhost:8080/product/update-photo/', photoFormData, {
+          await axios.post('http://localhost:8080/product/update-photo/', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
@@ -108,7 +107,7 @@ export default function BusinessHome() {
           },
         });
         const p_id = productResponse.data.p_id;
-        
+        console.log("form data", formData)
         // Upload the product photo if imageFile is available
         if (imageFile) {
           const photoFormData = new FormData();
@@ -182,7 +181,7 @@ function BusinessProfile(props) {
               <div className='col-sm-5'>
                 <h4>{compName}</h4>
                 <h6>{email}</h6>
-                <Button variant="primary" onClick={handleShowModal}>
+                <Button variant="primary" onClick={()=>{handleShowModal(null)}}>
                   Add Product
                 </Button>
               </div>
