@@ -376,7 +376,10 @@ def get_shopping_cart(request):
     c_id = get_uid(request)
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT s.c_id, s.p_id, p.name, p.current_price, p.description, s.quantity FROM shoppingcart s JOIN handcraftedgood p ON p.p_id = s.p_id WHERE s.c_id = %s", [c_id])
+            cursor.execute("""SELECT s.c_id, s.p_id, p.name, p.current_price, p.description, s.quantity, photo_name.photo_metadata FROM shoppingcart s JOIN handcraftedgood p ON p.p_id = s.p_id LEFT JOIN (
+                SELECT p_id, photo_metadata
+                FROM productphoto
+            ) AS photo_name ON photo_name.p_id = s.p_id WHERE s.c_id = %s""", [c_id])
             rows = cursor.fetchall()
             if not rows:
                 return Response([], status=200)
