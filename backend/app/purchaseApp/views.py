@@ -60,12 +60,14 @@ def list_all_products(request):
         query += " AND b.id = {}".format(business_id)
         #params.append(business_id)
     
-    if search_str:
+    if search_str and search_str != "null":
+        print(f"search str {search_str} with type {type(search_str)}")
         query += " AND hg.name LIKE '%{}%'".format(search_str)
         #params.append(search_str)
 
     # Executing the SQL query with the constructed parameters
     with connection.cursor() as cursor:
+        print(query)
         cursor.execute(query)
         products = cursor.fetchall()
 

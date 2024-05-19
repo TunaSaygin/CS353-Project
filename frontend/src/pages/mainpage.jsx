@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import image from '../../DB_html/assets/img/dogs/image3.jpeg';
 import { Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useAsyncError, useNavigate } from "react-router-dom";
 import ProductDetail from "./ProductDetail";
 import axios from "axios";
+import { useAuth } from "../context/authcontext";
 
 export default function Mainpage() {
     const [products, setProducts] = useState(null);
@@ -11,6 +12,8 @@ export default function Mainpage() {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [selectedCategory,setSelectedCategory] = useState(null)
+    const {baseUrl} = useAuth();
     const baseURL = "http://localhost:8080/purchase/all-products/";
     const token = window.localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -21,6 +24,7 @@ export default function Mainpage() {
                 const response = await axios.get(baseURL);
                 setProducts(response.data); // Set the data state with the fetched data
                 setLoading(false); // Set loading to false since data is fetched
+                console.log(response.data)
             } catch (error) {
                 setError(error);
                 setLoading(false);
@@ -65,9 +69,15 @@ export default function Mainpage() {
         }
     }
     const handleCategoryClick = async (categoryId) => {
-        setSelectedCategory(categoryId);
+        if(categoryId === selectedCategory){
+            setSelectedCategory(null)
+        }
+        else{
+            setSelectedCategory(categoryId);
+        }
         try {
-          const response = await axios.get(`${baseUrl}/purchase/all-products/?product_type=${categoryId}&search_str=${searc}`);
+            console.log(`${baseUrl}/purchase/all-products/?product_type=${categoryId}${search ? "&search_str="+search:''}`)
+          const response = await axios.get(`${baseUrl}/purchase/all-products/?product_type=${categoryId}&search_str=${search}`);
           setProducts(response.data);
         } catch (error) {
           console.error('Error filtering products:', error);
@@ -87,6 +97,19 @@ export default function Mainpage() {
                         <button onClick={(e) => handleSearch(e)} className="btn btn-primary">Search</button>
                     </div>
                 </div>
+                <div className="row justify-content-center mb-4">
+                    <div className="col-sm-8 d-flex flex-wrap justify-content-center">
+                        {categories.map((category) => (
+                            <button
+                                key={category.category_id}
+                                onClick={() => handleCategoryClick(category.category_id)}
+                                className={`btn m-2 ${selectedCategory === category.category_id ? 'btn-primary' : 'btn-outline-primary'}`}
+                            >
+                                {category.category_name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
             <div className="container mt-5 mb-5">
                 <div className="row justify-content-center">
@@ -98,7 +121,6 @@ export default function Mainpage() {
         </>
     );
 }
-
 function Product(props) {
     const imageURL = "http://localhost:8080/product/photo/";
     const purchaseURL = "http://localhost:8080/purchase/";
