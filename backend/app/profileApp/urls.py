@@ -14,7 +14,7 @@ urlpatterns = [
     # path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', custom_register, name='auth_register'),
-    path('login', custom_login, name='auth_login'),
+    path('login/', custom_login, name='auth_login'),
 
     #Profile
     path('profilePage/', getProfile, name='profile'),
