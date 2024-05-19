@@ -137,7 +137,7 @@ def add_to_cart(request):
         cursor.execute("""
             INSERT INTO shoppingcart (c_id, p_id, quantity)
             VALUES (%s, %s, %s)
-            ON DUPLICATE KEY UPDATE quantity = quantity + %s
+            ON CONFLICT (c_id, p_id) DO UPDATE SET quantity = EXCLUDED.quantity + %s
         """, [customer_id, product_id, quantity, quantity])
 
     return Response({'message': 'Product added to cart successfully'})
@@ -168,6 +168,8 @@ def purchase(request):
                     WHERE s.c_id = %s
                 """, [customer_id])
                 cart_items = cursor.fetchall()
+                print("cart_items", cart_items)
+                print("customer_id", customer_id)
 
                 # Calculating the total cost of items in the shopping cart
                 cart_total = sum(item[1] * item[2] for item in cart_items)
@@ -179,6 +181,7 @@ def purchase(request):
                 purchase_records = []
                 for item in cart_items:
                     purchase_records.append((customer_id, item[0], date.today(), item[1] * item[2], None))
+                print(purchase_records)
                     #todo check timestamp
 
                 cursor.executemany("""
