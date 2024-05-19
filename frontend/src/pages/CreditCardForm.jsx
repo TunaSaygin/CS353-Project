@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useAuth } from "../context/authcontext";
 
 export default function CreditCardDetails() {
+    const {reloadProfileChanges} = useAuth();
     const [amount, setAmount] = useState(0);
     const [error, setError] = useState(null);
     const [done, setDone] = useState(false);
@@ -13,6 +15,7 @@ export default function CreditCardDetails() {
         try {
             const response = await axios.post("http://localhost:8080/profile/update-balance/", {amount: amount});
             setDone(true);
+            reloadProfileChanges();
         }
         catch(error) {
             setError(error);
