@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import image from '../../DB_html/assets/img/dogs/image3.jpeg';
-import { Button, Col, Container, Form, Modal, Row } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ProductDetail from "./ProductDetail";
 import axios from "axios";
@@ -67,7 +67,7 @@ export default function Mainpage() {
     const handleCategoryClick = async (categoryId) => {
         setSelectedCategory(categoryId);
         try {
-          const response = await axios.get(`${baseUrl}/purchase/all-products/?product_type=${categoryId}&search_str=${search}`);
+          const response = await axios.get(`${baseUrl}/purchase/all-products/?product_type=${categoryId}&search_str=${searc}`);
           setProducts(response.data);
         } catch (error) {
           console.error('Error filtering products:', error);
@@ -75,54 +75,26 @@ export default function Mainpage() {
       };
     return (
         <>
-             <Container>
-      <Row className="my-4">
-        <Col>
-          <h1 className="text-center">Product Categories</h1>
-          <div className="d-flex justify-content-center flex-wrap">
-            {categories.map((category) => (
-              <Button
-                key={category.category_id}
-                variant={selectedCategory === category.category_id ? 'primary' : 'outline-primary'}
-                onClick={() => handleCategoryClick(category.category_id)}
-                className="m-2"
-              >
-                {category.category_name}
-              </Button>
-            ))}
-          </div>
-        </Col>
-      </Row>
-      <Row className="my-4">
-        <Col>
-          <Form.Control
-            type="text"
-            placeholder="Search..."
-            onChange={(e) => handleCategoryClick(e.target.value)}
-          />
-        </Col>
-      </Row>
-      <Row>
-        {products.map((product) => (
-          <Col key={product.p_id} md={4} className="mb-4">
-            <div className="card">
-              <img
-                src={product.photo_metadata ? `${baseUrl}/product/photo/${product.photo_metadata}/` : 'default-image-url'}
-                className="card-img-top"
-                alt={product.name}
-              />
-              <div className="card-body">
-                <h5 className="card-title">{product.name}</h5>
-                <p className="card-text">{product.current_price}₺</p>
-                <Button variant="primary">Details</Button>
-                <Button variant="secondary" className="ml-2">Add to Wishlist</Button>
-                <Button variant="success" className="ml-2">Add to Cart</Button>
-              </div>
+            <div className="container mt-5 mb-5">
+                <div className="row justify-content-center">
+                    <div className="col-sm-3">
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            className="form-control mb-3"
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <button onClick={(e) => handleSearch(e)} className="btn btn-primary">Search</button>
+                    </div>
+                </div>
             </div>
-          </Col>
-        ))}
-      </Row>
-    </Container>
+            <div className="container mt-5 mb-5">
+                <div className="row justify-content-center">
+                    {products.map((product) => (
+                        <Product key={product[1]} name={product[4]} price={product[3]} id={product[1]} image_name = {product[9]}/>
+                    ))}
+                </div>
+            </div>
         </>
     );
 }
