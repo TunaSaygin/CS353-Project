@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from profileApp.views import(
+from .views import(
     getProfile,
     # updateProfile,
     custom_login,
