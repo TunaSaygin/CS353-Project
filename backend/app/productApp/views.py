@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from profileApp.custom_permission import CustomPermission, get_uid
 
-from profileApp.custom_permission import CustomPermission, get_uid
 
 
 # Create your views here.
