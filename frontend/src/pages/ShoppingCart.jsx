@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import image from '../../DB_html/assets/img/dogs/image2.jpeg';
 import axios from "axios";
+import { useAuth } from "../context/authcontext";
 
 export default function ShoppingCart() {
     const [prods, setProds] = useState([]);
     const [error, setError] = useState(null);
+    const {reloadProfileChanges} = useAuth();
     const baseURL = "http://localhost:8080/purchase/";
     const token = window.localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -61,6 +63,7 @@ export default function ShoppingCart() {
             const res = await axios.post(`${baseURL}purchase/`);
             const r = await axios.get(`${baseURL}get-shopping-cart/`);
             setProds(r.data);
+            reloadProfileChanges();
         }
         catch(error) {
             setError(error)

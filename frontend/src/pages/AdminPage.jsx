@@ -403,8 +403,9 @@ function CategoryTable({categories, setCategoryData}){
         category_name: categoryName,
       });
       console.log('Category added:', response.data);
-      response = await axios.get(`${baseUrl}/product/list-categories/`);
-      setCategoryData(response.data);
+      fetch_response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(fetch_response.data);
+      setShowModal(false)
       return response.data;
     } catch (error) {
       console.error('Error adding category:', error.response ? error.response.data : error);
@@ -420,8 +421,8 @@ function CategoryTable({categories, setCategoryData}){
         category_name: categoryName,
       });
       console.log('Category updated:', response.data);
-      response = await axios.get(`${baseUrl}/product/list-categories/`);
-      setCategoryData(response.data);
+      fetch_response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(fetch_response.data);
       return response.data;
     } catch (error) {
       console.error('Error updating category:', error.response ? error.response.data : error);
@@ -436,8 +437,8 @@ function CategoryTable({categories, setCategoryData}){
         data: { category_id: categoryId },
       });
       console.log('Category deleted:', response.data);
-      response = await axios.get(`${baseUrl}/product/list-categories/`);
-      setCategoryData(response.data);
+      fetch_response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(fetch_response.data);
       return response.data;
     } catch (error) {
       console.error('Error deleting category:', error.response ? error.response.data : error);
@@ -453,7 +454,6 @@ function CategoryTable({categories, setCategoryData}){
           <tr>
             <th>Category Name</th>
             <th>Total Product Number</th>
-            <th>Image</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -465,7 +465,7 @@ function CategoryTable({categories, setCategoryData}){
               <td>
                 <div>
                   <Button variant="outline-primary" onClick={() => handleView(category)}>Update</Button>
-                  <Button variant="outline-primary" onClick={()=>{handleDelete(category.category_id)}}>Delete</Button>
+                  <Button variant="outline-primary" onClick={()=>{deleteCategory(category.category_id)}}>Delete</Button>
                 </div>
               </td>
             </tr>
