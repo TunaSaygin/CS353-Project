@@ -10,6 +10,7 @@ export default function BusinessHome() {
   const [products, setProducts] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [categories, setCategories] = useState([])
   const token = window.localStorage.getItem("token");
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   const [showModal, setShowModal] = useState(false);
@@ -31,6 +32,16 @@ export default function BusinessHome() {
       } catch (error) {
         console.error('Error fetching products:', error);
       }
+      const fetchCategories = async () => {
+        try {
+          const response = await axios.get(`${baseUrl}/product/list-categories/`);
+          setCategories(response.data);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      };
+    
+      fetchCategories();
     };
 
     fetchProducts();
@@ -161,6 +172,7 @@ export default function BusinessHome() {
         handleFileChange={handleFileChange}
         handleDragOver={handleDragOver}
         handleDrop={handleDrop}
+        categories={categories}
         imageFile={imageFile}
       />
     </div>
@@ -232,7 +244,7 @@ function ProductList(props) {
     </div>
   );
 }
-function AddProductModal({ show, handleClose, handleInputChange, handleFormSubmit, newProduct, handleFileChange, handleDragOver, handleDrop, imageFile, isUpdating }) {
+function AddProductModal({ categories,show, handleClose, handleInputChange, handleFormSubmit, newProduct, handleFileChange, handleDragOver, handleDrop, imageFile, isUpdating }) {
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
@@ -283,7 +295,22 @@ function AddProductModal({ show, handleClose, handleInputChange, handleFormSubmi
               onChange={handleInputChange}
             />
           </Form.Group>
-
+          <Form.Group className="mb-3" controlId="formCategory">
+            <Form.Label>Category</Form.Label>
+            <Form.Control
+              as="select"
+              name="category_id"
+              value={newProduct.category_id}
+              onChange={handleInputChange}
+            >
+              <option value="">Select Category</option>
+              {categories.map((category) => (
+                <option key={category.category_id} value={category.category_id}>
+                  {category.category_name}
+                </option>
+              ))}
+            </Form.Control>
+          </Form.Group>
           <Form.Group className="mb-3" controlId="formProductDescription">
             <Form.Label>Description</Form.Label>
             <Form.Control
