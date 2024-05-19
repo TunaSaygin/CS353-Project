@@ -10,7 +10,10 @@ from purchaseApp.views import(
     delete_from_wishlist,
     get_wishlist,
     get_purchase_history,
-    get_business_products
+    get_business_products,
+    get_shopping_cart,
+    delete_from_shopping_cart,
+    decrease_item_quantity
 )
 
 
@@ -24,7 +27,9 @@ urlpatterns = [
     path('add-to-wishlist/', add_to_wishlist, name='add_to_wishlist'),
     path('delete-from-wishlist/', delete_from_wishlist, name='delete_from_wishlist'),
     path('get-wishlist/', get_wishlist, name='get_wishlist'),
-    path('get-wishlist/', get_wishlist, name='get_wishlist'),
+    path('get-shopping-cart/', get_shopping_cart, name='get_shopping_cart'),
     path('get-purchase-hist/', get_purchase_history, name='get_purchase_hist'),
+    path('delete-from-shopping-cart/', delete_from_shopping_cart, name='delete_from_shopping_cart'),
+    path('decrease-cart-item/', decrease_item_quantity, name='decrease_cart_item')
 
 ]

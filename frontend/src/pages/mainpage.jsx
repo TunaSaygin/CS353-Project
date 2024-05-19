@@ -100,8 +100,12 @@ export default function Mainpage() {
 }
 
 function Product(props) {
-    const imageURL = "http://localhost:8080/product/photo/"
+    const imageURL = "http://localhost:8080/product/photo/";
+    const purchaseURL = "http://localhost:8080/purchase/";
     const [show, setShow] = useState(false);
+    const token = window.localStorage.getItem("token");
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const [error, setError] = useState(null);
 
     function hideModal() {
         setShow(false);
@@ -112,6 +116,33 @@ function Product(props) {
     }
 
     const { name, price, id, image_name } = props;
+
+    const handleCart = async () => {
+        try {
+            const response = await axios.post(`${purchaseURL}add-to-cart/`, {product_id: id, quantity: 1});
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    const handleWishList = async () => {
+        try {
+            const response = await axios.post(`${purchaseURL}add-to-wishlist/`, {p_id: id});
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    if(error) {
+        setError(null);
+        return(
+            <div>
+                <h2>Error occurred while adding.</h2>
+            </div>
+        );
+    }
 
     return (
         <>
@@ -130,8 +161,8 @@ function Product(props) {
                                     </div>
                                     <div className="d-flex flex-column">
                                         <button className="btn btn-primary btn-sm mb-2" type="button" onClick={handleDetails}>Details</button>
-                                        <button className="btn btn-outline-primary mb-2 btn-sm" type="button">Add to wishlist</button>
-                                        <button className="btn btn-outline-primary btn-sm" type="button">Add to cart</button>
+                                        <button className="btn btn-outline-primary mb-2 btn-sm" type="button" onClick={handleWishList}>Add to wishlist</button>
+                                        <button className="btn btn-outline-primary btn-sm" type="button" onClick={handleCart}>Add to cart</button>
                                     </div>
                                 </div>
                             </div>
