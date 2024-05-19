@@ -38,7 +38,23 @@ def get_all_businesses(request):
 
             # Fetch all businesses
             cursor.execute("""
-                SELECT * FROM business
+                WITH pid_bid_sum AS (
+                           select hg.b_id as b_id, hg.p_id as p_id,hg.name as name,sum(p.p_price) as total_price                       
+                           FROM handcraftedgood hg
+                           JOIN purchase p ON hg.p_id = p.p_id
+                           GROUP BY hg.b_id, hg.p_id, hg.name
+                ),
+                bid_max AS (
+                           select pbs.b_id as b_id, max(pbs.total_price) as max_price
+                           FROM pid_bid_sum as pbs
+                           GROUP BY pbs.b_id
+                ),
+                pid_bid_max AS (
+                           select bm.b_id, pbs.name as product_name, bm.max_price
+                           FROM pid_bid_sum pbs JOIN bid_max bm ON pbs.b_id = bm.b_id and pbs.total_price=bm.max_price             
+                )SELECT b.id,b.income ,p.name,pbm.product_name
+                           FROM business b NATURAL JOIN profile p
+                           LEFT JOIN pid_bid_max pbm ON b.id = pbm.b_id           
             """)
             rows = cursor.fetchall()
             logger.info(f"Rows fetched: {rows}")
@@ -83,7 +99,7 @@ def get_all_customers(request):
 
             # Fetch all customers
             cursor.execute("""
-                SELECT * FROM customer
+                SELECT id, balance, delivery_address, name FROM customer NATURAL JOIN profile
             """)
             rows = cursor.fetchall()
             logger.info(f"Rows fetched: {rows}")
@@ -156,3 +172,39 @@ def get_most_sold_product(request, business_id):
         logger.error(f"Error: {str(e)}")
         return Response({'error': str(e)}, status=400)
 
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_all_purchases(request):
+    if request.method == 'GET':
+        try:
+            user_id = get_uid(request)
+            # Get customer ID from the request
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM admin WHERE id = %s
+                """, [user_id])
+                is_admin = cursor.fetchone()[0]
+                logger.info(f"Is Admin: {is_admin}")
+
+                if not is_admin:
+                    return Response({'error': 'Permission denied'}, status=403)
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""SELECT purchase.c_id, purchase.p_date, 
+                               purchase.return_date,  p1.name as customer_name, p2.name as business_name,
+                               hg.name as product_name
+                               FROM purchase 
+                               JOIN profile p1 ON p1.id = purchase.c_id
+                               JOIN handcraftedgood hg ON hg.p_id = purchase.p_id
+                               JOIN profile p2 ON p2.id = hg.b_id
+                               """,[])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the customers
+            purchases = [dict(zip(columns, row)) for row in rows]
+
+            return Response(purchases, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
