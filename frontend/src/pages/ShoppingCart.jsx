@@ -34,6 +34,39 @@ export default function ShoppingCart() {
         }
     }
 
+    async function handleIncrease(id) {
+        try {
+            const response = await axios.post(`${baseURL}add-to-cart/`, {product_id: id, quantity: 1});
+            const r = await axios.get(`${baseURL}get-shopping-cart/`);
+            setProds(r.data);
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    async function handleDecrease(id) {
+        try {
+            const r1 = await axios.put(`${baseURL}decrease-cart-item/`, {p_id: id});
+            const r2 = await axios.get(`${baseURL}get-shopping-cart/`);
+            setProds(r2.data);
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    async function handlePurchase() {
+        try {
+            const res = await axios.post(`${baseURL}purchase/`);
+            const r = await axios.get(`${baseURL}get-shopping-cart/`);
+            setProds(r.data);
+        }
+        catch(error) {
+            setError(error)
+        }
+    }
+
     if (error) {
         return (
             <div>
@@ -73,9 +106,9 @@ export default function ShoppingCart() {
                                         </div>
                                         <div className="col">
                                             <h4>
-                                                <a style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">-</a>
+                                                <a onClick={() => handleDecrease(product.p_id)} style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">-</a>
                                                 <a>{product.quantity}</a>
-                                                <a style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">+</a>
+                                                <a onClick={()=>handleIncrease(product.p_id)} style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">+</a>
                                             </h4>
                                         </div>
                                         <div className="col">{product.current_price}₺<a onClick={() => deleteItem(product.p_id)} style={{ cursor: "pointer", textDecoration: "none" }} className="close m-2">&#10005;</a></div>
@@ -86,6 +119,13 @@ export default function ShoppingCart() {
                             <div><h2>You have no products in your cart.</h2></div>
                         )}
                     </div>
+                    {prods.length > 0 && (
+                    <div className="row">
+                        <div className="col text-right">
+                            <button onClick={handlePurchase} className="btn btn-primary">Proceed to Purchase</button>
+                        </div>
+                    </div>
+                )}
                 </div>
             </div>
         </div>
