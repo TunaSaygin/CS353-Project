@@ -1,9 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import img1 from '../../DB_html/assets/img/dogs/image1.jpeg';
-import img2 from '../../DB_html/assets/img/dogs/image2.jpeg';
-import img3 from '../../DB_html/assets/img/dogs/image3.jpeg';
+import axios from "axios";
 
 export default function ProductDetail({hideButtons, id}) {
+    const [data,setData] = useState(null);
+    const [error, setError] = useState(null);
+    const baseURL = "http://localhost:8080/";
+    useEffect(() => {
+       async function getData() {
+            try{
+                console.log(id);
+                const res = await axios.get(`${baseURL}purchase/view-product/`, {selected_pid: id});
+                setData(res.data);
+                console.log(res.data);
+            }
+            catch(error) {
+                setError(error);
+            }
+       }
+       getData();
+    }, [])
+    
     return (
         <div className="container mt-5 mb-5">
             <div className="row justify-content-center">
@@ -33,18 +50,8 @@ function Product(props) {
     return (
         <>
             <div className="col-lg-6">
-                <div className="images p-3">
-                    <div className="text-center p-4"> 
-                        <img className="rounded img-fluid" id="main-image" src={img1} alt="Product Main" /> 
-                    </div>
-                    <div className="row">
-                        <div className="col">
-                            <img className="rounded img-fluid" src={img2} alt="Thumbnail 1" /> 
-                        </div>
-                        <div className="col">
-                            <img className="rounded img-fluid" src={img3} alt="Thumbnail 2" /> 
-                        </div>
-                    </div>
+                <div className="text-center p-4"> 
+                    <img className="rounded img-fluid" id="main-image" src={img1} alt="Product Main" /> 
                 </div>
             </div>
             <div className="col-lg-6">

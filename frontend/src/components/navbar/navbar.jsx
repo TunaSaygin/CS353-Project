@@ -4,11 +4,13 @@ import { useAuth } from '../../context/authcontext';
 import { Dropdown, Nav, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import CreditCardDetails from '../../pages/CreditCardForm';
+import GiftCardForm from '../../pages/GiftCardForm';
 
 export default function Navbar() {
   const acc_type = window.localStorage.getItem('acc_type');
   const { isLoggedIn, logout, user, baseUrl } = useAuth(); // Use the useAuth hook
   const [show, setShow] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   const nav = useNavigate();
   const handleLogout = () => {
     logout();
@@ -42,6 +44,12 @@ export default function Navbar() {
     else {
       nav("/login");
     }
+  }
+  function handleGiftCard() {
+    setShowCard(true);
+  }
+  function hideGiftCardForm() {
+    setShowCard(false);
   }
   const [profile, setProfile] = useState({
     // username: 'johndoe',
@@ -86,6 +94,13 @@ export default function Navbar() {
                   <Nav.Link className='my-auto' onClick={handleWishList}>Wishlist</Nav.Link>
                 </li>
                 </>): <></>}
+                {acc_type === 'business' ? (
+                  <>
+                    <li className='nav-item px-2'>
+                      <Nav.Link onClick={handleGiftCard} className='my-auto'>Generate Gift Card</Nav.Link>
+                    </li>
+                  </>
+                ): <></>}
                 <li className='nav-item px-2'>
                   <Nav.Link onClick={handleHome}>Home</Nav.Link>
                 </li>
@@ -138,6 +153,15 @@ export default function Navbar() {
     </Modal.Header>
     <Modal.Body>
         <CreditCardDetails hideButtons={false}></CreditCardDetails>
+    </Modal.Body>
+</Modal>
+
+<Modal show={showCard} onHide={hideGiftCardForm} size="lg" centered>
+    <Modal.Header closeButton>
+        <Modal.Title>Generate Gift Card</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        <GiftCardForm></GiftCardForm>
     </Modal.Body>
 </Modal>
 </>

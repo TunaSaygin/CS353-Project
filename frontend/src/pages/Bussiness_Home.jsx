@@ -210,7 +210,7 @@ function ProductList(props) {
   const imageURL = "http://localhost:8080/product/photo/"
   console.log(products);
   const productItems = products.map(product => (
-    <div key={product.id} className="col-md-4 mb-2 justify-items-center">
+    <div key={product.p_id} className="col-md-4 mb-2 justify-items-center">
       <div className="card">
         <div className="row-md-6">
           <div>
