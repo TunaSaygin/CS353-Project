@@ -14,13 +14,17 @@ def list_all_products(request):
     min_price = request.query_params.get('min_price')
     max_price = request.query_params.get('max_price')
     business_id = request.query_params.get('business_id')
+    search_str = request.query_params.get('search_str')
 
     # Constructing the base SQL query
     query = """
-        SELECT hg.*
+        SELECT hg.*, photo_name.photo_metadata
         FROM handcraftedgood hg
+        LEFT JOIN (
+            SELECT p_id, photo_metadata
+            FROM productphoto
+        ) AS photo_name ON hg.p_id = photo_name.p_id
     """
-
     # Constructing the JOIN clause based on the presence of business_id filter
     if business_id:
         query += """
@@ -39,29 +43,52 @@ def list_all_products(request):
     params = []
 
     if product_type:
-        query += " AND bl.category_id = %s"
-        params.append(product_type)
+        query += " AND bl.category_id = {}".format(product_type)
+        #params.append(product_type)
 
     if min_price:
-        query += " AND hg.current_price >= %s"
-        params.append(min_price)
+        query += " AND hg.current_price >= {}".format(min_price)
+        #params.append(min_price)
 
     if max_price:
-        query += " AND hg.current_price <= %s"
-        params.append(max_price)
+        query += " AND hg.current_price <= {}".format(max_price)
+        #params.append(max_price)
 
     if business_id:
-        query += " AND b.id = %s"
-        params.append(business_id)
+        query += " AND b.id = {}".format(business_id)
+        #params.append(business_id)
+    
+    if search_str:
+        query += " AND hg.name LIKE '%{}%'".format(search_str)
+        #params.append(search_str)
 
     # Executing the SQL query with the constructed parameters
     with connection.cursor() as cursor:
-        cursor.execute(query, params)
+        cursor.execute(query)
         products = cursor.fetchall()
 
     # TODO: Serialize the products before returning the response
     return Response(products)
 
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_business_products(request):
+    business_id = get_uid(request)
+     # Fetching details of the selected product
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT h.p_id, h.name, h.current_price, h.inventory, photo_name.photo_metadata
+            FROM handcraftedgood h
+            LEFT JOIN (
+                SELECT p_id, photo_metadata
+                FROM productphoto
+            ) AS photo_name ON h.p_id = photo_name.p_id
+            WHERE h.b_id = %s
+        """, [business_id,])
+        columns = [col[0] for col in cursor.description]
+        products = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return Response(products)
 
 @api_view(['GET'])
 @permission_classes([CustomPermission])
@@ -264,3 +291,34 @@ def get_wishlist(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_purchase_history(request):
+    if request.method == 'GET':
+        try:
+            # Get customer ID from the request
+            c_id = get_uid(request)
+            with connection.cursor() as cursor:
+                # Fetch purchase history for the given customer ID
+                cursor.execute("SELECT * FROM purchase WHERE c_id = %s", [c_id])
+                result = cursor.fetchall()
+
+            # Assuming your purchase table has columns: p_id, c_id, p_date, return_date, etc.
+            purchases = [
+                {
+                    'p_id': row[0],
+                    'c_id': row[1],
+                    'p_date': row[2],
+                    'return_date': row[3],
+                    # Add other columns as needed
+                } 
+                for row in result
+            ]
+
+            return Response({'purchases': purchases}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    

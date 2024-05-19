@@ -1,16 +1,18 @@
 import React, { useCallback, useState } from 'react';
 import { Card, Button, Form, Container, Row, Col, Image, Nav, InputGroup, FormControl } from 'react-bootstrap';
+import { useAuth } from '../context/authcontext';
 export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [editableProfile, setEditableProfile] = useState(null);
+  const {user, baseUrl} = useAuth()
   const [activeTab,setActiveTab] = useState("past_purchases");
   const [profile, setProfile] = useState({
     username: 'johndoe',
     image: 'vite.svg',
-    bio: 'A short bio here',
+    // bio: 'A short bio here',
     email: 'john.doe@example.com',
   });
-
+  
   const [pastPurchases, setPastPurchases] = useState([
     // Mock data for past purchases
     { id: 1, title: "Purchase 1", date: "2023-01-01", isReturned:true },
@@ -19,7 +21,7 @@ export default function Profile() {
   ]);
 
   const handleEditToggle = () => {
-    editing || setEditableProfile(profile);
+    editing || setEditableProfile({...user, "image": user.image_name ? user.image_name : profile.image});
     setEditing(!editing);
   };
   const handleSearch = (e) => {
@@ -48,7 +50,9 @@ export default function Profile() {
                 <Col md={4} className="d-flex align-items-center justify-content-center">
                   {editing ? (
                     <ImageLoader profile={editableProfile} setProfile={setEditableProfile}/>
-                  ) : (
+                  ) : ( user.image_name ? 
+                    <Image src={`${baseUrl}/profile/image/${user.image_name}/`} roundedCircle style={{ width: '150px', height: '150px' }} />
+                    :
                     <Image src={profile.image} roundedCircle style={{ width: '150px', height: '150px' }} />
                   )}
                 </Col>
@@ -59,10 +63,10 @@ export default function Profile() {
                         <Form.Label>Username</Form.Label>
                         <Form.Control type="text" name="username" value={editableProfile.username} onChange={handleEditedChange} />
                       </Form.Group>
-                      <Form.Group className="mb-3">
+                      {/* <Form.Group className="mb-3">
                         <Form.Label>Bio</Form.Label>
                         <Form.Control as="textarea" rows={3} name="bio" value={editableProfile.bio} onChange={handleEditedChange} />
-                      </Form.Group>
+                      </Form.Group> */}
                       <Form.Group className="mb-3">
                         <Form.Label>Email</Form.Label>
                         <Form.Control type="email" name="email" value={editableProfile.email} onChange={handleEditedChange} />
@@ -73,9 +77,11 @@ export default function Profile() {
                     </Form>
                   ) : (
                     <>
-                      <h2>{profile.username}</h2>
-                      <p className="text-muted">{profile.bio}</p>
-                      <p>{profile.email}</p>
+                      <h2>{user.name}</h2>
+                      {/* <p className="text-muted">{profile.bio}</p> */}
+                      <p>{user.email}</p>
+                      {user.acc_type === 'business' && <p>{user.iban}</p>}
+                      {user.acc_type === 'customer' && <p>{user.delivery_address}</p>}
                       <Button variant="primary" onClick={handleEditToggle}>Edit Profile</Button>
                     </>
                   )}

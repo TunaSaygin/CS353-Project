@@ -1,3 +1,4 @@
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 # from .serializers import MyTokenObtainPairSerializer
 # from rest_framework import generics
@@ -14,6 +15,9 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.db import transaction
 from profileApp.custom_permission import CustomPermission
+import uuid
+import mimetypes
+import psycopg2
 from profileApp.custom_permission import get_uid
 
 # Create your views here.
@@ -80,7 +84,7 @@ def custom_register(request):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     
-    return Response({'token': token, 'name': username, 'id': id}, status=200)
+    return Response({'token': token,'name':username ,'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
 
 
@@ -94,14 +98,16 @@ def custom_login(request):
     # Raw SQL query to fetch user data by username
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, email, password
+            SELECT id, email, password, image_metadata,name
             FROM profile
             WHERE email = %s
         """, [email])
         user_row = cursor.fetchone()
         print("user row",user_row)
         if user_row:
-            user_id, db_email, db_password = user_row
+            user_id, db_email, db_password, image_name,user_name = user_row
+            print(image_name)
+            print(user_row)
             # user = Profile.objects.get(pk=user_id)
             if password==db_password and email == db_email:
                 payload = {
@@ -116,7 +122,7 @@ def custom_login(request):
                         """, [user_id])
                 cus = cursor.fetchone()
                 if cus:
-                    return Response({'token': token, 'id': cus[0], 'name': email, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer'})
+                    return Response({'token': token, 'id': cus[0],'email':email ,'name': user_name, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer','image_name':image_name})
                 
                 cursor.execute("""
                             SELECT id, income, IBAN
@@ -125,11 +131,11 @@ def custom_login(request):
                         """, [user_id])
                 bus = cursor.fetchone()
                 if bus:
-                    return Response({'token': token, 'id': bus[0], 'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business'})
+                    return Response({'token': token, 'id': bus[0], 'name':user_name ,'email': email, 'income': bus[1], 'iban': bus[2], 'acc_type': 'business', 'image_name':image_name})
                 cursor.execute("SELECT id FROM admin WHERE id = %s", [user_id])
                 admin = cursor.fetchone()
                 if admin:
-                    return Response({'token': token, 'id': user_id, 'acc_type': 'admin'})
+                    return Response({'token': token, 'id': user_id, 'email': email, 'acc_type': 'admin', 'name':user_name})
                 return Response({'error': 'Account type needed'}, status=400)
            
             else:
@@ -320,6 +326,83 @@ def get_gift_cards_of_customer(request):
         cursor.execute("SELECT * FROM giftcard WHERE cust_id = %s AND redemption_date is NULL", [c_id])
         rows = cursor.fetchall()
         if rows:
-            print(rows)
-            return Response({'rows': rows}, status=200)
+            columns = [col[0] for col in cursor.description]
+            res = [dict(zip(columns, row)) for row in rows]
+            print(res)
+            return Response(res, status=200)
     return Response({'error': 'Customer has no gift cards'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def upload_profile_photo(request):
+    user_id = get_uid(request)
+    file = request.FILES.get('file')
+
+    if not file:
+        return Response({'error': 'No file provided'}, status=400)
+    file_extension = file.name.split('.')[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    photo_metadata = unique_filename
+    photo_blob = file.read()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE profile
+                SET image_metadata = %s, image_blob = %s
+                WHERE id = %s
+            """, (photo_metadata, psycopg2.Binary(photo_blob), user_id))
+
+            connection.commit()
+            cursor.close()
+        return Response({'message': 'Image successfully uploaded'}, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+@api_view(['GET'])    
+def view_profile_photo(request,image_metadata):
+    print(image_metadata)
+    try:
+        print("I am here!")
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT image_blob, image_metadata FROM profile
+                WHERE image_metadata = %s
+            """, (image_metadata,))
+            print("cursor executed")
+            result = cursor.fetchone()
+            cursor.close()
+            print("retrieved")
+        if result is None:
+                return Response('Image not found', status=404)
+
+        photo_blob, photo_metadata = result
+
+        # Determine the MIME type of the file based on its extension
+        mime_type, _ = mimetypes.guess_type(photo_metadata)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'  # Use a binary stream type if MIME type is unknown
+        print("The mime type is",mime_type)
+        return HttpResponse(photo_blob, content_type=mime_type)
+    except Exception as e:
+        return Response(f'Error retrieving image: {str(e)}', status=500)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_balance(request):
+    c_id = get_uid(request)
+    amount = request.data.get('amount')
+    if int(amount) <= 0:
+        return Response({'error': 'Amount should be greater than zero'}, status=400)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM customer WHERE id = %s", [c_id])
+        cus = cursor.fetchone()
+        if cus:
+            cursor.execute("UPDATE customer SET balance = balance + %s WHERE id = %s RETURNING id, balance", [amount, c_id])
+            row = cursor.fetchone()
+            if row:
+                id = row[0]
+                balance = row[1]
+                return Response({'id': id, 'balance': balance}, status=200)
+            else:
+                return Response({'error': 'Error updating the balance'}, status=500)
+        else:
+            return Response({'error': 'Customer not found'}, status=404)
