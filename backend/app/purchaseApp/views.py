@@ -175,7 +175,7 @@ def purchase(request):
     try:
         with transaction.atomic():
             # Extracting customer ID and payment details from request data
-            customer_id = request.data.get('customer_id')
+            customer_id = get_uid(request)
             balance = 0
             cart_total = 0
             with connection.cursor() as cursor:
@@ -210,7 +210,7 @@ def purchase(request):
                 # Inserting purchase records into the purchase table
                 purchase_records = []
                 for item in cart_items:
-                    purchase_records.append((customer_id, item[0], date.today(), item[1] * item[2], None))
+                    purchase_records.append((customer_id, item[0], datetime.now(), item[1] * item[2], None))
 
                 cursor.executemany("""
                     INSERT INTO purchase (c_id, p_id, p_date, p_price, return_date)
