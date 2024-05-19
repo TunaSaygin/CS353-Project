@@ -158,7 +158,7 @@ export default function Profile() {
                           <Card.Body>
                             <Card.Title>{purchase.product_name}</Card.Title>
                             <Card.Text>Date: {purchase.p_date}</Card.Text>
-                            <Button variant='danger' onClick={() => { handleReturn(purchase.p_id, purchase.p_date) }}> Return Product</Button>
+                            {user.acc_type === 'customer' && <Button variant='danger' onClick={() => { handleReturn(purchase.p_id, purchase.p_date) }}> Return Product</Button>}
                           </Card.Body>
                         </Card>
                       </Col>

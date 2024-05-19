@@ -416,5 +416,35 @@ def get_purchase_history(request):
     else:
         return Response({'error': 'Invalid request method'}, status=405)
     
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_business_purchase_history(request):
+    if request.method == 'GET':
+        try:
+            # Get customer ID from the request
+            b_id = get_uid(request)
+            with connection.cursor() as cursor:
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""SELECT purchase.c_id, purchase.p_date, purchase.p_id,
+                               purchase.return_date,  p1.name as customer_name, p2.name as business_name,
+                               hg.name as product_name
+                               FROM purchase 
+                               JOIN profile p1 ON p1.id = purchase.c_id
+                               JOIN handcraftedgood hg ON hg.p_id = purchase.p_id
+                               JOIN (select * from profile where id = %s) p2 ON p2.id = hg.b_id
+                               """, [b_id])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the customers
+            purchases = [dict(zip(columns, row)) for row in rows]
+
+            return Response({'purchases': purchases}, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+    
     
     
