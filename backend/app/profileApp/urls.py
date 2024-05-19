@@ -13,7 +13,8 @@ from .views import(
     redeem_gift_card,
     view_profile_photo,
     upload_profile_photo,
-    update_balance
+    update_balance,
+    update_profile
 )
 
 
@@ -31,6 +32,7 @@ urlpatterns = [
     path('upload-image/', upload_profile_photo, name='upload_photo'),
     path('image/<str:image_metadata>/', view_profile_photo, name='view_photo'),
     path('update-balance/', update_balance, name='update_balance'),
+    path('update-profile/', update_profile, name='update_profile'),
     #Profile
     path('profilePage/', getProfile, name='profile'),
     # path('profile/update/', updateProfile, name='update-profile'),

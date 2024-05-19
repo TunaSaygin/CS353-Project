@@ -145,8 +145,8 @@ CREATE VIEW business_verification_status AS
 SELECT b.id, p.name, p.image_metadata, p.image_blob, b.verifying_admin, b.verification_date, a.id AS admin_id, ap.name AS admin_name
 FROM business b
 JOIN profile p ON b.id = p.id
-JOIN admin a ON b.verifying_admin = a.id
-JOIN profile ap ON a.id = ap.id;
+LEFT JOIN admin a ON b.verifying_admin = a.id
+LEFT JOIN profile ap ON a.id = ap.id;
 
 CREATE VIEW product_ratings AS
 SELECT h.name, r.rate_amount, r.comment
@@ -157,7 +157,7 @@ CREATE VIEW product_listings AS
 SELECT h.name, h.current_price, h.inventory, c.category_name
 FROM handcraftedgood h
 JOIN belong b ON h.b_id = b.p_id
-JOIN category c ON b.category_id = c.category_id;
+LEFT JOIN category c ON b.category_id = c.category_id;
 
 CREATE VIEW admin_activity AS
 SELECT a.id, p.name, r.report_id, r.description, r.report_time

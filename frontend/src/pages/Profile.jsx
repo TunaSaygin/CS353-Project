@@ -1,18 +1,20 @@
 import React, { useCallback, useState } from 'react';
 import { Card, Button, Form, Container, Row, Col, Image, Nav, InputGroup, FormControl } from 'react-bootstrap';
 import { useAuth } from '../context/authcontext';
+import axios from 'axios';
 export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [editableProfile, setEditableProfile] = useState(null);
-  const {user, baseUrl} = useAuth()
+  const {user, baseUrl,reloadProfileChanges} = useAuth()
   const [activeTab,setActiveTab] = useState("past_purchases");
+  const token = window.localStorage.getItem("token");
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   const [profile, setProfile] = useState({
     username: 'johndoe',
     image: 'vite.svg',
     // bio: 'A short bio here',
     email: 'john.doe@example.com',
   });
-  
   const [pastPurchases, setPastPurchases] = useState([
     // Mock data for past purchases
     { id: 1, title: "Purchase 1", date: "2023-01-01", isReturned:true },
@@ -21,7 +23,7 @@ export default function Profile() {
   ]);
 
   const handleEditToggle = () => {
-    editing || setEditableProfile({...user, "image": user.image_name ? user.image_name : profile.image});
+    editing || setEditableProfile({...user, username:user.name, image: user.image_name ? user.image_name : profile.image});
     setEditing(!editing);
   };
   const handleSearch = (e) => {
@@ -32,10 +34,32 @@ export default function Profile() {
     setEditableProfile({ ...editableProfile, [name]: value });
   }
 
-  const handleSave = () => {
-    // Implement save logic here
-    setProfile(editableProfile)
-    setEditing(false);
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      if(editableProfile.username){
+        formData.append('username', editableProfile.username);
+
+      }
+      formData.append('email', editableProfile.email);
+      if (editableProfile.imageFile) {
+        formData.append('file', editableProfile.imageFile);
+      }
+
+      const response = await axios.post(`${baseUrl}/profile/update-profile/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200) {
+        setProfile(editableProfile);
+        setEditing(false);
+      }
+      reloadProfileChanges()
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
   };
   const handleReturn = (id) =>{
     console.log(`Purchased product with ID ${id} is returned`);

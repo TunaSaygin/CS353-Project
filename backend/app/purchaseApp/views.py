@@ -18,12 +18,14 @@ def list_all_products(request):
 
     # Constructing the base SQL query
     query = """
-        SELECT hg.*, photo_name.photo_metadata
+        SELECT hg.*, photo_name.photo_metadata , profile.name
         FROM handcraftedgood hg
         LEFT JOIN (
             SELECT p_id, photo_metadata
             FROM productphoto
         ) AS photo_name ON hg.p_id = photo_name.p_id
+        JOIN business b ON hg.b_id = b.id
+        JOIN profile ON profile.id = b.id
     """
     # Constructing the JOIN clause based on the presence of business_id filter
     if business_id:
@@ -304,24 +306,26 @@ def get_purchase_history(request):
             c_id = get_uid(request)
             with connection.cursor() as cursor:
                 # Fetch purchase history for the given customer ID
-                cursor.execute("SELECT * FROM purchase WHERE c_id = %s", [c_id])
-                result = cursor.fetchall()
+                cursor.execute("""SELECT purchase.c_id, purchase.p_date, 
+                               purchase.return_date,  p1.name as customer_name, p2.name as business_name,
+                               hg.name as product_name
+                               FROM purchase 
+                               JOIN profile p1 ON p1.id = purchase.c_id
+                               JOIN handcraftedgood hg ON hg.p_id = purchase.p_id
+                               JOIN profile p2 ON p2.id = hg.b_id
+                               WHERE c_id = %s
+                               """, [c_id])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
 
-            # Assuming your purchase table has columns: p_id, c_id, p_date, return_date, etc.
-            purchases = [
-                {
-                    'p_id': row[0],
-                    'c_id': row[1],
-                    'p_date': row[2],
-                    'return_date': row[3],
-                    # Add other columns as needed
-                } 
-                for row in result
-            ]
+            # Construct a list of dictionaries representing the customers
+            purchases = [dict(zip(columns, row)) for row in rows]
 
             return Response({'purchases': purchases}, status=200)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
+    
+    
     
