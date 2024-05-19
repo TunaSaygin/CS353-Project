@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data);
       console.log(`user = ${user}`)
       window.localStorage.setItem('token', token); // Save the token in local storage
+      window.localStorage.setItem('acc_type', acc_type);
       if (acc_type === "admin") {
         navigate("/admin_page");
       } else if (acc_type === "customer") {

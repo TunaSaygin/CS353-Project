@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import CreditCardDetails from '../../pages/CreditCardForm';
 
 export default function Navbar() {
+  const acc_type = window.localStorage.getItem('acc_type');
   const { isLoggedIn, logout, user, baseUrl } = useAuth(); // Use the useAuth hook
   const [show, setShow] = useState(false);
   const nav = useNavigate();
@@ -21,6 +22,20 @@ export default function Navbar() {
   }
   function handleBalance() {
     setShow(true);
+  }
+  function handleHome() {
+    if(acc_type === 'customer') {
+      nav("/home_customer");
+    }
+    else if(acc_type === 'business') {
+      nav("/home_business");
+    }
+    else if(acc_type === 'admin') {
+      nav("/admin_page");
+    }
+    else {
+      nav("/login");
+    }
   }
   const [profile, setProfile] = useState({
     // username: 'johndoe',
@@ -41,7 +56,7 @@ export default function Navbar() {
           <ul className="navbar-nav gap-3 align-items-center">
             {isLoggedIn ? (
               <>
-                <li className="nav-item px-2">
+                {/* <li className="nav-item px-2">
                   <Dropdown>
                     <Dropdown.Toggle variant='success' id="notifications-dropdown">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '40px', height: '40px' }}>
@@ -51,12 +66,22 @@ export default function Navbar() {
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       <Dropdown.Item href="#!">Notification 1</Dropdown.Item>
-                      {/* Add more notifications here */}
                     </Dropdown.Menu>
                   </Dropdown>
+                </li> */}
+                {acc_type === 'customer' ? (
+                <><li className='nav-item px-2'>
+                  <Nav.Link onClick={handleBalance} className='my-auto'>Add Balance</Nav.Link>
                 </li>
                 <li className='nav-item px-2'>
-                  <Nav.Link onClick={handleBalance} className='my-auto'>Add Balance</Nav.Link>
+                  <Nav.Link className='my-auto'>Shopping Cart</Nav.Link>
+                </li>
+                <li className='nav-item px-2'>
+                  <Nav.Link className='my-auto'>Wishlist</Nav.Link>
+                </li>
+                </>): <></>}
+                <li className='nav-item px-2'>
+                  <Nav.Link onClick={handleHome}>Home</Nav.Link>
                 </li>
                 <li className="nav-item">
                   <Dropdown>

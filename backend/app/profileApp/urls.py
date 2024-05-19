@@ -12,7 +12,8 @@ from profileApp.views import(
     get_gift_cards_of_customer,
     redeem_gift_card,
     view_profile_photo,
-    upload_profile_photo
+    upload_profile_photo,
+    update_balance
 )
 
 
@@ -29,6 +30,7 @@ urlpatterns = [
     path('redeem-gift-card/', redeem_gift_card, name='redeem_gift_card'),
     path('upload-image/', upload_profile_photo, name='upload_photo'),
     path('image/<str:image_metadata>/', view_profile_photo, name='view_photo'),
+    path('update-balance/', update_balance, name='update_balance'),
     #Profile
     path('profilePage/', getProfile, name='profile'),
     # path('profile/update/', updateProfile, name='update-profile'),
