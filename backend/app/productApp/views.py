@@ -111,7 +111,7 @@ def return_product(request):
             data = request.data
             c_id = get_uid(request)
             p_id = data.get('p_id')
-
+            p_date = data.get('p_date')
             with connection.cursor() as cursor:
                 cursor.execute("""
                     UPDATE purchase
@@ -119,8 +119,8 @@ def return_product(request):
                         WHEN return_date IS NULL AND p_date + INTERVAL '30 DAY' >= NOW() THEN NOW()
                         ELSE return_date
                     END
-                    WHERE c_id = %s AND p_id = %s;
-                """, [c_id, p_id])
+                    WHERE c_id = %s AND p_id = %s AND p_date = %s;
+                """, [c_id, p_id,p_date])
                 connection.commit()
             return Response({'message': 'Product return successfully done'}, status=201)
         except Exception as e:

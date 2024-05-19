@@ -395,7 +395,7 @@ def get_purchase_history(request):
             c_id = get_uid(request)
             with connection.cursor() as cursor:
                 # Fetch purchase history for the given customer ID
-                cursor.execute("""SELECT purchase.c_id, purchase.p_date, 
+                cursor.execute("""SELECT purchase.c_id, purchase.p_date, purchase.p_id,
                                purchase.return_date,  p1.name as customer_name, p2.name as business_name,
                                hg.name as product_name
                                FROM purchase 
