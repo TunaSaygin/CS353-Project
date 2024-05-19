@@ -67,8 +67,8 @@ def custom_register(request):
             elif acc_type == 'business':
                 iban = request.data.get('iban')
                 cursor.execute("""
-                    INSERT INTO business (id, IBAN)
-                    VALUES (%s, %s)
+                    INSERT INTO business (id, IBAN, income)
+                    VALUES (%s, %s,0)
                     RETURNING id, IBAN
                 """, [id, iban])
                 
@@ -357,6 +357,45 @@ def upload_profile_photo(request):
         return Response({'message': 'Image successfully uploaded'}, status=201)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_profile(request):
+    try:
+        user_id = get_uid(request)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        image_file = request.FILES.get('file')
+        file_extension = None
+        photo_metadata = None
+        photo_blob = None
+
+        if image_file:
+            file_extension = image_file.name.split('.')[-1]
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            photo_metadata = unique_filename
+            photo_blob = image_file.read()
+        with connection.cursor() as cursor:
+            # Update profile details
+            # Update profile image if provided
+            if photo_metadata and photo_blob:
+                cursor.execute("""
+                    UPDATE profile
+                    SET name = %s, email = %s, image_metadata = %s, image_blob = %s
+                    WHERE id = %s
+                """, [username, email, photo_metadata, psycopg2.Binary(photo_blob), user_id])
+            else:
+                cursor.execute("""
+                    UPDATE profile
+                    SET name = %s, email = %s
+                    WHERE id = %s
+                """, [username, email, user_id])
+
+        return Response({'message': 'Profile updated successfully'}, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    
+
 @api_view(['GET'])    
 def view_profile_photo(request,image_metadata):
     print(image_metadata)

@@ -10,7 +10,11 @@ from .views import (
     product_rating,
     get_product_rating_details,
     update_product,
-    update_product_photo
+    update_product_photo,
+    list_categories,
+    add_category,
+    update_category,
+    delete_category
 )
 
 urlpatterns = [
@@ -25,5 +29,8 @@ urlpatterns = [
     path('photo/<str:photo_metadata>/', view_product_photo, name='view_photo'),
     path('rate/pid/<int:product_id>/', product_rating, name='post_product_rating'),
     path('rating/pid/<int:product_id>/', get_product_rating_details, name='product_rating'),
-
+    path('list-categories/', list_categories, name='list_categories'),
+    path('add-category/', add_category, name='add_category'),
+    path('update-category/', update_category, name='update_category'),
+    path('delete-category/', delete_category, name='delete_category'),
 ]

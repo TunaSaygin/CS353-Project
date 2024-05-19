@@ -1,50 +1,101 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Table, InputGroup, FormControl, Container, Row, Col, Nav,Modal,Form } from 'react-bootstrap';
 import Dashboard from '../components/graph';
 import ProductDetail from './ProductDetail';
+import axios from 'axios';
+import { useAuth } from '../context/authcontext';
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('businesses');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const businessData = [
-    { name: 'Beymen', totalIncome: '150.032,01 TL', mostSoldProduct: 'Pantalon' },
-    { name: 'Bershka', totalIncome: '148.023,62 TL', mostSoldProduct: 'Etek' },
-    // ... more business data
-  ];
-  const customerData = [
-    {name:'Tuna', deliveryAddress:'Alacaatlı Mah. Ankara 06810',balance:'5'},
-    {name:'Sıla', deliveryAddress:'Bilkent Dormitories 52',balance:'55'}
-  ];
+  const token = window.localStorage.getItem("token");
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  const [businessData, setBusinessData] = useState([]);
+  const [productData,setProductData] = useState([]);
+  const [customerData,setCustomerData] = useState([])
+  const [transactionData, setTransactionData] = useState([])
+  const [categoryData,setCategoryData] = useState([])
+  const {user, baseUrl} = useAuth()
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/activity/get-all-businesses/`);
+        console.log(response.data)
+        setBusinessData(response.data);
+      } catch (error) {
+        console.error('Error fetching business data:', error);
+      }
+    };
+    const fetchProductData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/purchase/all-products/`);
+        console.log(response.data);
+        setProductData(response.data);
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+      }
+    };
+    const fetchCustomerData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/activity/get-all-customers/`);
+        console.log("customerData",response.data);
+        setCustomerData(response.data);
+      } catch (error) {
+        console.error('Error fetching customer data:', error);
+      }
+    };
+    const fetchTransactionData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/activity/get-all-purchases/`);
+        console.log(response.data);
+        setTransactionData(response.data);
+      } catch (error) {
+        console.error('Error fetching transaction data:', error);
+      }
+    };
+    const fetchCategoryData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/product/list-categories/`);
+        setCategoryData(response.data);
+      } catch (error) {
+        console.error('Error fetching category data:', error);
+      }
+    };
+    fetchBusinessData();
+    fetchProductData();
+    fetchCustomerData();
+    fetchTransactionData();
+    fetchCategoryData();
+  }, [baseUrl]);
   const reports = [
     { name: 'Admin1', date: '2023-04-21'},
     { name: 'Admin2', date: '2023-04-18'},
     { name: 'Admin3', date: '2023-04-15'},
   ];
 
-  const transactionData = [
-    { name: 'Tuna Saygın', action: 'Purchased', business: 'Beymen', product: 'Pantalon', date: '24/3/2024' },
-    { name: 'Sıla Özel', action: 'Purchased', business: 'Bershka', product: 'Etek', date: '23/3/2024' },
-    { name: 'Ece Beyhan', action: 'Purchased', business: 'Boyner', product: 'Mont Mavi', date: '22/3/2024' },
-    { name: 'Burhan Tabak', action: 'Purchased', business: 'Tepe Home', product: 'Sabun', date: '16/3/2024' },
-    { name: 'Tuna Saygın', action: 'Returned', business: 'Tepe Home', product: 'Havlul', date: '14/3/2024' },
-    { name: 'Işıl Özgü', action: 'Purchased', business: 'D&R', product: 'Masa Lambası x2', date: '29/2/2024' },
-    { name: 'Tuna Cuma', action: 'Returned', business: 'M&S', product: 'Çorap', date: '21/2/2024' },
-  ];
-  const productData = [
-    { name: 'Eco-Friendly Water Bottle', inventory: 150, sold: 200, price: '$15.99', category: 'Outdoor', business: 'Nature Goods Co.' },
-    { name: 'Wireless Headphones', inventory: 75, sold: 50, price: '$89.99', category: 'Electronics', business: 'Tech Trends' },
-    { name: 'Organic Cotton T-Shirt', inventory: 200, sold: 150, price: '$19.99', category: 'Apparel', business: 'EcoWear' },
-    { name: 'Professional Yoga Mat', inventory: 80, sold: 120, price: '$34.99', category: 'Fitness', business: 'Yoga Essentials' },
-    { name: 'Gourmet Coffee Beans', inventory: 300, sold: 250, price: '$12.99', category: 'Food', business: 'Aroma Brew' },
-    { name: 'LED Desk Lamp', inventory: 50, sold: 100, price: '$45.99', category: 'Furniture', business: 'BrightLife' }
-  ];
-  const categoryData = [
-    { name: 'Electronics', totalProducts: 320, image: 'imageURL1' },
-    { name: 'Clothing', totalProducts: 150, image: 'imageURL2' },
-    { name: 'Home & Garden', totalProducts: 215, image: 'imageURL3' },
-    { name: 'Toys & Games', totalProducts: 89, image: 'imageURL4' },
-    { name: 'Sports', totalProducts: 78, image: 'imageURL5' }
-  ];
+  // const transactionData = [
+  //   { name: 'Tuna Saygın', action: 'Purchased', business: 'Beymen', product: 'Pantalon', date: '24/3/2024' },
+  //   { name: 'Sıla Özel', action: 'Purchased', business: 'Bershka', product: 'Etek', date: '23/3/2024' },
+  //   { name: 'Ece Beyhan', action: 'Purchased', business: 'Boyner', product: 'Mont Mavi', date: '22/3/2024' },
+  //   { name: 'Burhan Tabak', action: 'Purchased', business: 'Tepe Home', product: 'Sabun', date: '16/3/2024' },
+  //   { name: 'Tuna Saygın', action: 'Returned', business: 'Tepe Home', product: 'Havlul', date: '14/3/2024' },
+  //   { name: 'Işıl Özgü', action: 'Purchased', business: 'D&R', product: 'Masa Lambası x2', date: '29/2/2024' },
+  //   { name: 'Tuna Cuma', action: 'Returned', business: 'M&S', product: 'Çorap', date: '21/2/2024' },
+  // ];
+  // const productData = [
+  //   { name: 'Eco-Friendly Water Bottle', inventory: 150, sold: 200, price: '$15.99', category: 'Outdoor', business: 'Nature Goods Co.' },
+  //   { name: 'Wireless Headphones', inventory: 75, sold: 50, price: '$89.99', category: 'Electronics', business: 'Tech Trends' },
+  //   { name: 'Organic Cotton T-Shirt', inventory: 200, sold: 150, price: '$19.99', category: 'Apparel', business: 'EcoWear' },
+  //   { name: 'Professional Yoga Mat', inventory: 80, sold: 120, price: '$34.99', category: 'Fitness', business: 'Yoga Essentials' },
+  //   { name: 'Gourmet Coffee Beans', inventory: 300, sold: 250, price: '$12.99', category: 'Food', business: 'Aroma Brew' },
+  //   { name: 'LED Desk Lamp', inventory: 50, sold: 100, price: '$45.99', category: 'Furniture', business: 'BrightLife' }
+  // ];
+  // const categoryData = [
+  //   { name: 'Electronics', totalProducts: 320, image: 'imageURL1' },
+  //   { name: 'Clothing', totalProducts: 150, image: 'imageURL2' },
+  //   { name: 'Home & Garden', totalProducts: 215, image: 'imageURL3' },
+  //   { name: 'Toys & Games', totalProducts: 89, image: 'imageURL4' },
+  //   { name: 'Sports', totalProducts: 78, image: 'imageURL5' }
+  // ];
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -120,7 +171,7 @@ export default function AdminPage() {
       {activeTab === 'categories' && (
         <Row>
           <Col>
-           <CategoryTable categories={categoryData} />
+           <CategoryTable categories={categoryData} setCategoryData = {setCategoryData}/>
           </Col>
         </Row>
       )}
@@ -143,8 +194,8 @@ function BussinessTable({businessData}){
         {businessData.map((business, index) => (
           <tr key={index}>
             <td>{business.name}</td>
-            <td>{business.totalIncome}</td>
-            <td>{business.mostSoldProduct}</td>
+            <td>{business.income}</td>
+            <td>{business.product_name}</td>
             <td>
               <Button variant="outline-primary">Verify</Button>
             </td>
@@ -167,9 +218,9 @@ function CustomerTable({customers}){
       </thead>
       <tbody>
         {customers.map((customer, index) => (
-          <tr key={index}>
+          <tr key={customer.id}>
             <td>{customer.name}</td>
-            <td>{customer.deliveryAddress}</td>
+            <td>{customer.delivery_address}</td>
             <td>{customer.balance}</td>
             <td>
               <div>
@@ -233,7 +284,7 @@ function ReportTable({reports}){
   );
 }
 function ActionTable({transactions}){
-
+  console.log("transactions",transactions);
   return(
     <>
       <Table striped bordered hover>
@@ -249,11 +300,11 @@ function ActionTable({transactions}){
         <tbody>
           {transactions.map((transaction, index) => (
             <tr key={index}>
-              <td>{transaction.name}</td>
-              <td>{transaction.action}</td>
-              <td>{transaction.business}</td>
-              <td>{transaction.product}</td>
-              <td>{transaction.date}</td>
+              <td>{transaction.customer_name}</td>
+              <td>{transaction.return_date ?"Return":"Purchase"}</td>
+              <td>{transaction.business_name}</td>
+              <td>{transaction.product_name}</td>
+              <td>{transaction.return_date ? transaction.return_date:transaction.p_date}</td>
             </tr>
           ))}
         </tbody>
@@ -283,20 +334,18 @@ function ProductTable({products}){
           <tr>
             <th>Name</th>
             <th>Inventory (Remaining)</th>
-            <th>Sold</th>
             <th>Price</th>
-            <th>Category Name</th>
+            <th>Product Material</th>
             <th>Associated Business</th>
           </tr>
         </thead>
         <tbody>
           {products.map((product, index) => (
             <tr key={index}>
-              <td>{product.name}</td>
-              <td>{product.inventory}</td>
-              <td>{product.sold}</td>
-              <td>{product.category}</td>
-              <td>{product.business}</td>
+              <td>{product[4]}</td>
+              <td>{product[5]}</td>
+              <td>{product[3]}</td>
+              <td>{product[10]}</td>
               <td>
                 <div>
                   <Button variant="outline-primary" onClick={handleView}>View Details</Button>
@@ -317,12 +366,14 @@ function ProductTable({products}){
     </>
   );
 }
-function CategoryTable({categories}){
+function CategoryTable({categories, setCategoryData}){
+  const {baseUrl} = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState('');
-
-  const handleView = () => {
+  const [selectedCategory,setSelectedCategory] = useState(null);
+  const handleView = (category = null) => {
     setModalContent('Update Category');
+    setSelectedCategory(category);
     setShowModal(true);
   };
 
@@ -335,13 +386,64 @@ function CategoryTable({categories}){
     setShowModal(false);
   };
   const [name, setName] = useState('');
-  const [image, setImage] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (modalContent === 'Add Category'){
+      addCategory(name);
+    }
+    else if(modalContent === 'Update Category'){
+      updateCategory(selectedCategory.category_id,name);
+    }
     onSave({ name, image });
   };
-
+  const addCategory = async (categoryName) => {
+    try {
+      const response = await axios.post(`${baseUrl}/product/add-category/`, {
+        category_name: categoryName,
+      });
+      console.log('Category added:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
+  
+  // Method to update an existing category
+  const updateCategory = async (categoryId, categoryName) => {
+    try {
+      const response = await axios.post(`${baseUrl}/product/update-category/`, {
+        category_id: categoryId,
+        category_name: categoryName,
+      });
+      console.log('Category updated:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
+  
+  // Method to delete a category
+  const deleteCategory = async (categoryId) => {
+    try {
+      const response = await axios.delete(`${baseUrl}/product/delete-category/`, {
+        data: { category_id: categoryId },
+      });
+      console.log('Category deleted:', response.data);
+      response = await axios.get(`${baseUrl}/product/list-categories/`);
+      setCategoryData(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting category:', error.response ? error.response.data : error);
+      throw error;
+    }
+  };
 
   return(
     <>
@@ -358,15 +460,12 @@ function CategoryTable({categories}){
         <tbody>
           {categories.map((category, index) => (
             <tr key={index}>
-              <td>{category.name}</td>
-              <td>{category.totalProducts}</td>
-              <td>
-                <img src={category.image} alt={category.name} style={{ width: '50px', height: '50px' }} />
-              </td>
+              <td>{category.category_name}</td>
+              <td>0</td>
               <td>
                 <div>
                   <Button variant="outline-primary" onClick={() => handleView(category)}>Update</Button>
-                  <Button variant="outline-primary" onClick={handleView}>Delete</Button>
+                  <Button variant="outline-primary" onClick={()=>{handleDelete(category.category_id)}}>Delete</Button>
                 </div>
               </td>
             </tr>
@@ -386,16 +485,6 @@ function CategoryTable({categories}){
           placeholder="Enter category name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </Form.Group>
-      <Form.Group className="mb-3">
-        <Form.Label>Image URL</Form.Label>
-        <Form.Control
-          type="text"
-          placeholder="Enter image URL"
-          value={image}
-          onChange={(e) => setImage(e.target.value)}
           required
         />
       </Form.Group>

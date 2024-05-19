@@ -28,7 +28,7 @@ def create_product(request):
             description = data.get('description')
             recipient_type = data.get('recipient_type')
             materials = data.get('materials')
-
+            print("b_id",b_id,"/inventory:",inventory,"name",name)
             with connection.cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO handcraftedgood (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
@@ -281,3 +281,61 @@ def get_product_rating_details(request, product_id):
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def list_categories(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                            SELECT * FROM category
+            """,[])
+            rows = cursor.fetchall()
+            columns = [col[0] for col in cursor.description]
+
+        # Construct a list of dictionaries representing the customers
+        categories = [dict(zip(columns, row)) for row in rows]
+        return Response(categories,status=200)
+    except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def add_category(request):
+    category_name = request.data.get("category_name")
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                            INSERT INTO category(category_name) VALUES(%s)
+            """,[category_name])
+        return Response({'Message':'Successfully addded category'},status=200)
+    except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_category(request):
+    category_name = request.data.get("category_name")
+    category_id = request.data.get("category_id")
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                            UPDATE category SET category_name = %s WHERE category_id = %s
+            """,[category_name,category_id])
+        return Response({'Message':f'Successfully updated category id {category_id} with name {category_name}'},status=200)
+    except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([CustomPermission])
+def delete_category(request):
+    category_id = request.data.get("category_id")
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM category WHERE category_id = %s
+            """, [category_id])
+        return Response({'Message': f'Successfully deleted category id {category_id}'}, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
