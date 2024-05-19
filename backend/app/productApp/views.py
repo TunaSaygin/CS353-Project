@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.db import connection
 from rest_framework.decorators import api_view, permission_classes
 import psycopg2
+from django.db import transaction
 from django.http import HttpResponse
 import uuid
 import mimetypes
@@ -28,15 +29,19 @@ def create_product(request):
             description = data.get('description')
             recipient_type = data.get('recipient_type')
             materials = data.get('materials')
+            category_id = data.get('category_id')
             print("b_id",b_id,"/inventory:",inventory,"name",name)
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO handcraftedgood (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    RETURNING p_id
-                """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
-                p_id = cursor.fetchone()[0]
-            return Response({'message': 'Product created successfully','p_id': p_id}, status=201)
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO handcraftedgood (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        RETURNING p_id
+                    """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
+                    p_id = cursor.fetchone()[0]
+                    cursor.execute(""" INSERT INTO belong VALUES(%s,%s)
+                                   """,[category_id,p_id])
+                return Response({'message': 'Product created successfully','p_id': p_id}, status=201)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:
