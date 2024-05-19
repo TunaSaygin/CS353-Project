@@ -101,7 +101,39 @@ CREATE TABLE purchase (
     PRIMARY KEY (c_id, p_id, p_date),
     CHECK(p_price > 0)
 );
-
+CREATE OR REPLACE FUNCTION update_business_income ()
+RETURNS trigger AS
+$$
+     DECLARE
+        v_bid INT;
+     BEGIN
+         IF TG_OP = 'INSERT' THEN
+        -- Get the current income of the business
+        SELECT b_id INTO v_bid
+        FROM handcraftedgood
+        WHERE p_id = NEW.p_id; -- Assuming b_id is the foreign key in the purchase table referencing the business table
+        -- Update the income
+        UPDATE business
+        SET income = coalesce(income,0) + NEW.p_price
+        WHERE id = v_bid;
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF NEW.return_date IS NOT NULL AND OLD.return_date is null THEN
+            -- Get the current income of the business
+        SELECT b_id INTO v_bid
+        FROM handcraftedgood
+        WHERE p_id = NEW.p_id; -- Assuming b_id is the foreign key in the purchase table referencing the business table
+            -- Update the income
+            UPDATE business
+            SET income = income - OLD.p_price
+            WHERE id = v_bid;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER btrig
+     BEFORE INSERT OR UPDATE OF return_date ON purchase
+     FOR EACH ROW EXECUTE PROCEDURE update_business_income();
 CREATE TABLE wishlist (
     c_id INT,
     p_id INT,
