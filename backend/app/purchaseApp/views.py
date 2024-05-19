@@ -128,7 +128,7 @@ def view_product(request):
 @permission_classes([CustomPermission])
 def add_to_cart(request):
     # Extracting customer ID, product ID, and quantity from request data
-    customer_id = request.data.get('customer_id')
+    customer_id = get_uid(request)
     product_id = request.data.get('product_id')
     quantity = request.data.get('quantity')
 
@@ -229,6 +229,44 @@ def add_to_wishlist(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([CustomPermission])
+def delete_from_shopping_cart(request):
+    try:
+        user_id = get_uid(request)
+        p_id = request.data.get('p_id')
+        if not p_id:
+            return Response({'error': 'Product ID is required'}, status=400)
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM shoppingcart WHERE c_id = %s AND p_id = %s", [user_id, p_id])
+            cursor.execute("""
+                SELECT COUNT(*) FROM shoppingcart
+                WHERE c_id = %s AND p_id = %s
+            """, [user_id, p_id])
+            count = cursor.fetchone()[0]
+            if count == 0:
+                return Response({'message': 'Item removed from shopping cart successfully.'}, status=200)
+            else:
+                return Response({'message': 'Failed to remove item from shopping cart.'}, status=500)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    
+# @api_view(['UPDATE'])
+# @permission_classes([CustomPermission])
+# def decrease_item_quantity(request):
+#     try:
+#         user_id = get_uid(request)
+#         p_id = request.data.get('p_id')
+#         if not p_id:
+#             return Response({'error': 'Product ID is required'}, status=400)
+#         with connection.cursor() as cursor:
+#             cursor.execute("SELECT quantity FROM shoppingcart WHERE p_id = %s AND c_id= %s", [p_id, user_id])
+#             row = cursor.fetchone()
+#             if row:
+#                 quantity = row[0]
+#                 if quantity > 1:
+#                     cursor.execute("UPDATE shoppingcart SET quantity")
     
 @api_view(['DELETE'])
 @permission_classes([CustomPermission])
@@ -292,6 +330,22 @@ def get_wishlist(request):
 
         return Response(wishlist, status=200)
 
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+    
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_shopping_cart(request):
+    c_id = get_uid(request)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT s.c_id, s.p_id, p.name, p.current_price, p.description, s.quantity FROM shoppingcart s JOIN handcraftedgood p ON p.p_id = s.p_id WHERE s.c_id = %s", [c_id])
+            rows = cursor.fetchall()
+            if not rows:
+                return Response([], status=200)
+            columns = [col[0] for col in cursor.description]
+            cart = [dict(zip(columns, row)) for row in rows]
+            return Response(cart, status=200)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
     

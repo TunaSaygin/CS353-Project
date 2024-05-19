@@ -1,7 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import image from '../../DB_html/assets/img/dogs/image2.jpeg';
+import axios from "axios";
 
 export default function ShoppingCart() {
+    const [prods, setProds] = useState([]);
+    const [error, setError] = useState(null);
+    const baseURL = "http://localhost:8080/purchase/";
+    const token = window.localStorage.getItem("token");
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get(`${baseURL}get-shopping-cart/`);
+                console.log("here");
+                console.log(response.data);
+                setProds(response.data);
+            } catch (error) {
+                setError(error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    async function deleteItem(id) {
+        try {
+            const r1 = await axios.delete(`${baseURL}delete-from-shopping-cart/`, { data: { p_id: id } });
+            const r2 = await axios.get(`${baseURL}get-shopping-cart/`);
+            setProds(r2.data);
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    if (error) {
+        return (
+            <div>
+                <h2>Error: {error.message}</h2>
+            </div>
+        );
+    }
+
     return (
         <div className="card">
             <div className="row justify-content-center d-flex">
@@ -13,33 +53,40 @@ export default function ShoppingCart() {
                         </div>
                     </div>
                     <div className="row-md-6">
-                        <Item name="Crochet Hat" price="10₺" count="1" />
-                        <Item name="Hat" price="10₺" count="5" />
-                        <Item name="Knitted sweater" price="10₺" count="4" />
+                        {prods.length > 0 ? (
+                            prods.map((product) => (
+                                // <Item 
+                                //     key={product.p_id} 
+                                //     id = {product.p_id}
+                                //     name={product.name} 
+                                //     price={product.current_price} 
+                                //     count={product.quantity} 
+                                // />
+                                <div key={product.p_id} className="row border-top border-bottom">
+                                    <div className="row main align-items-center">
+                                        <div className="col-2">
+                                            <img className="img-fluid rounded-start rounded-end" src={image} alt={product.name} />
+                                        </div>
+                                        <div className="col">
+                                            {/* <div className="row text-muted">Shirt</div> */}
+                                            <div className="row">{product.name}</div>
+                                        </div>
+                                        <div className="col">
+                                            <h4>
+                                                <a style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">-</a>
+                                                <a>{product.quantity}</a>
+                                                <a style={{ cursor: "pointer", textDecoration: "none" }} className="m-2">+</a>
+                                            </h4>
+                                        </div>
+                                        <div className="col">{product.current_price}₺<a onClick={() => deleteItem(product.p_id)} style={{ cursor: "pointer", textDecoration: "none" }} className="close m-2">&#10005;</a></div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div><h2>You have no products in your cart.</h2></div>
+                        )}
                     </div>
                 </div>
-            </div>
-        </div>
-
-    );
-}
-
-
-
-function Item(props) {
-    const { name, price, count } = props;
-    return (
-        <div className="row border-top border-bottom">
-            <div className="row main align-items-center">
-                <div className="col-2"><img className="img-fluid rounded-start rounded-end" src={image}></img></div>
-                <div className="col">
-                    {/* <div className="row text-muted">Shirt</div> */}
-                    <div className="row">{name}</div>
-                </div>
-                <div className="col">
-                    <h5><a className="m-2">-</a><a>{count}</a><a className="m-2" >+</a></h5>
-                </div>
-                <div className="col">{price}<span className="close m-2">&#10005;</span></div>
             </div>
         </div>
     );
