@@ -23,6 +23,12 @@ export default function Navbar() {
   function handleBalance() {
     setShow(true);
   }
+  function handleShoppingCart() {
+    nav('/shopping_cart');
+  }
+  function handleWishList() {
+    nav("/wishlist");
+  }
   function handleHome() {
     if(acc_type === 'customer') {
       nav("/home_customer");
@@ -74,10 +80,10 @@ export default function Navbar() {
                   <Nav.Link onClick={handleBalance} className='my-auto'>Add Balance</Nav.Link>
                 </li>
                 <li className='nav-item px-2'>
-                  <Nav.Link className='my-auto'>Shopping Cart</Nav.Link>
+                  <Nav.Link onClick={handleShoppingCart} className='my-auto'>Shopping Cart</Nav.Link>
                 </li>
                 <li className='nav-item px-2'>
-                  <Nav.Link className='my-auto'>Wishlist</Nav.Link>
+                  <Nav.Link className='my-auto' onClick={handleWishList}>Wishlist</Nav.Link>
                 </li>
                 </>): <></>}
                 <li className='nav-item px-2'>
