@@ -326,8 +326,10 @@ def get_gift_cards_of_customer(request):
         cursor.execute("SELECT * FROM giftcard WHERE cust_id = %s AND redemption_date is NULL", [c_id])
         rows = cursor.fetchall()
         if rows:
-            print(rows)
-            return Response({'rows': rows}, status=200)
+            columns = [col[0] for col in cursor.description]
+            res = [dict(zip(columns, row)) for row in rows]
+            print(res)
+            return Response(res, status=200)
     return Response({'error': 'Customer has no gift cards'}, status=404)
 
 @api_view(['POST'])
@@ -382,3 +384,25 @@ def view_profile_photo(request,image_metadata):
         return HttpResponse(photo_blob, content_type=mime_type)
     except Exception as e:
         return Response(f'Error retrieving image: {str(e)}', status=500)
+    
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def update_balance(request):
+    c_id = get_uid(request)
+    amount = request.data.get('amount')
+    if int(amount) <= 0:
+        return Response({'error': 'Amount should be greater than zero'}, status=400)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM customer WHERE id = %s", [c_id])
+        cus = cursor.fetchone()
+        if cus:
+            cursor.execute("UPDATE customer SET balance = balance + %s WHERE id = %s RETURNING id, balance", [amount, c_id])
+            row = cursor.fetchone()
+            if row:
+                id = row[0]
+                balance = row[1]
+                return Response({'id': id, 'balance': balance}, status=200)
+            else:
+                return Response({'error': 'Error updating the balance'}, status=500)
+        else:
+            return Response({'error': 'Customer not found'}, status=404)
