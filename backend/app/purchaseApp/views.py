@@ -103,21 +103,22 @@ def view_product(request):
     # Fetching details of the selected product
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT h.name, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, p.photo_blob, c.category_name
-            FROM handcraftedgood h
-            JOIN productphoto p ON h.p_id = p.p_id
-            JOIN category c ON h.category_id = c.category_id
-            LEFT JOIN (
-                SELECT p_id, price AS price
-                FROM pastprice
-                WHERE change_date = (
-                    SELECT MAX(change_date)
-                    FROM pastprice
-                    WHERE p_id = %s
-                )
-            ) pp ON h.p_id = pp.p_id
-            WHERE h.p_id = %s
-        """, [selected_pid, selected_pid])
+               SELECT h.name, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, p.photo_blob, c.category_name
+               FROM handcraftedgood h
+               JOIN productphoto p ON h.p_id = p.p_id
+               JOIN belong b ON h.p_id = b.p_id
+               JOIN category c ON b.category_id = c.category_id
+               LEFT JOIN (
+                   SELECT p_id, price AS price
+                   FROM pastprice
+                   WHERE change_date = (
+                       SELECT MAX(change_date)
+                       FROM pastprice
+                       WHERE p_id = %s
+                   )
+               ) pp ON h.p_id = pp.p_id
+               WHERE h.p_id = %s
+           """, [selected_pid, selected_pid])
         product_details = cursor.fetchone()
 
         if product_details:
@@ -177,7 +178,7 @@ def purchase(request):
     try:
         with transaction.atomic():
             # Extracting customer ID and payment details from request data
-            customer_id = request.data.get('customer_id')
+            customer_id = get_uid(request)
             balance = 0
             cart_total = 0
             with connection.cursor() as cursor:
@@ -212,7 +213,7 @@ def purchase(request):
                 # Inserting purchase records into the purchase table
                 purchase_records = []
                 for item in cart_items:
-                    purchase_records.append((customer_id, item[0], date.today(), item[1] * item[2], None))
+                    purchase_records.append((customer_id, item[0], datetime.now(), item[1] * item[2], None))
 
                 cursor.executemany("""
                     INSERT INTO purchase (c_id, p_id, p_date, p_price, return_date)

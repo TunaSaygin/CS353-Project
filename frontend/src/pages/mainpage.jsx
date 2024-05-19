@@ -16,6 +16,8 @@ export default function Mainpage() {
     const {baseUrl} = useAuth();
     const baseURL = "http://localhost:8080/purchase/all-products/";
     const token = window.localStorage.getItem("token");
+    const [min,setMin] = useState(null);
+    const [max, setMax] = useState(null);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
     useEffect(() => {
@@ -61,7 +63,8 @@ export default function Mainpage() {
     async function handleSearch(e) {
         e.preventDefault();
         try {
-            const res = await axios.get(`${baseURL}?search_str=${search}`);
+            console.log(`${baseURL}?search_str=${search}&min_price=${min ? min : ""}&max_price=${max ? max: ""}`);
+            const res = await axios.get(`${baseURL}?search_str=${search ? search : ""}&min_price=${min ? min : ""}&max_price=${max ? max: ""}`);
             setProducts(res.data);
         }
         catch(error) {
@@ -85,16 +88,27 @@ export default function Mainpage() {
       };
     return (
         <>
-            <div className="container mt-5 mb-5">
-                <div className="row justify-content-center">
-                    <div className="col-sm-3">
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="form-control mb-3"
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                        <button onClick={(e) => handleSearch(e)} className="btn btn-primary">Search</button>
+           <div className="container mt-5 mb-5">
+            <div className="row justify-content-center">
+                <div className="col-sm-12">
+                    <div className="row">
+                        <div className="col-sm-2 mb-3">
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                className="form-control"
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                        <div className="col-sm-2 mb-3">
+                            <input onChange={(e) => setMin(e.target.value)} className="form-control" type="number" placeholder="Min"></input>
+                        </div>
+                        <div className="col-sm-2 mb-3">
+                            <input onChange={(e) => setMax(e.target.value)} className="form-control" type="number" placeholder="Max"></input>
+                        </div>
+                        <div className="col-sm-2 mb-3">
+                            <button onClick={(e) => handleSearch(e)} className="btn btn-primary w-100">Filter</button>
+                        </div>
                     </div>
                 </div>
                 <div className="row justify-content-center mb-4">
@@ -111,6 +125,8 @@ export default function Mainpage() {
                     </div>
                 </div>
             </div>
+        </div>
+
             <div className="container mt-5 mb-5">
                 <div className="row justify-content-center">
                     {products.map((product) => (
