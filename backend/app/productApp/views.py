@@ -39,9 +39,9 @@ def create_product(request):
                         RETURNING p_id
                     """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
                     p_id = cursor.fetchone()[0]
-                    if category_id:
-                        cursor.execute(""" INSERT INTO belong VALUES(%s,%s)
-                                   """,[category_id,p_id])
+                    
+                    cursor.execute(""" INSERT INTO belong VALUES(%s,%s)
+                                """,[category_id,p_id])
                 return Response({'message': 'Product created successfully','p_id': p_id}, status=201)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
