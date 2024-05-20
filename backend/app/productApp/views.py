@@ -11,8 +11,6 @@ from rest_framework.decorators import permission_classes
 from profileApp.custom_permission import CustomPermission, get_uid
 
 
-
-# Create your views here.
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def create_product(request):
