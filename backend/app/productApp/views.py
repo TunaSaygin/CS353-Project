@@ -103,9 +103,14 @@ def add_product_photo(request):
 
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob)
-                    VALUES (%s, %s, %s, %s)
-                """, [p_id, b_id, photo_metadata, photo_blob_decoded])
+                    WITH upsert AS(
+                        UPDATE productphoto  SET photo_metadata=%s , photo_blob=%s
+                        WHERE p_id = %s AND b_id = %s
+                        RETURNING *
+                    )
+                    INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob) SELECT %s, %s,%s,%s
+                                WHERE NOT EXISTS (SELECT 1 FROM upsert) 
+                """, [photo_metadata, photo_blob_decoded,p_id, b_id, p_id, b_id, photo_metadata, photo_blob_decoded])
 
             return Response({'message': 'Photo added successfully'}, status=201)
         except Exception as e:
@@ -154,9 +159,14 @@ def upload_product_photo(request):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob)
-                VALUES (%s, %s, %s, %s)
-            """, (p_id, b_id, photo_metadata, psycopg2.Binary(photo_blob)))
+                WITH upsert AS(
+                        UPDATE productphoto  SET photo_metadata=%s , photo_blob=%s
+                        WHERE p_id = %s AND b_id = %s
+                        RETURNING *
+                    )
+                    INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob) SELECT %s, %s,%s,%s
+                                WHERE NOT EXISTS (SELECT 1 FROM upsert) 
+            """, (photo_metadata, psycopg2.Binary(photo_blob), p_id, b_id, p_id, b_id, photo_metadata, psycopg2.Binary(photo_blob)))
 
             connection.commit()
             cursor.close()

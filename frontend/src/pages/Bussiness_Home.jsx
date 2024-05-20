@@ -76,6 +76,7 @@ export default function BusinessHome() {
   };
   const handleCloseModal = () => setShowModal(false);
   const validateForm = () => {
+    console.log("in validate")
     const newErrors = {};
     if (!newProduct.name) newErrors.name = 'Product Name is required';
     if (!newProduct.current_price || newProduct.current_price<=0) newErrors.current_price = 'Current Price is required';
@@ -279,6 +280,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="name"
               value={newProduct.name}
               onChange={handleInputChange}
+              isInvalid={!!errors.name}
             />
             <Form.Control.Feedback type="invalid">
               {errors.name}
@@ -293,6 +295,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="current_price"
               value={newProduct.current_price}
               onChange={handleInputChange}
+              isInvalid={!!errors.current_price}
             />
             <Form.Control.Feedback type="invalid">
               {errors.current_price}
@@ -307,6 +310,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="inventory"
               value={newProduct.inventory}
               onChange={handleInputChange}
+              isInvalid={!!errors.inventory}
             />
             <Form.Control.Feedback type="invalid">
               {errors.inventory}
@@ -321,6 +325,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="return_period"
               value={newProduct.return_period}
               onChange={handleInputChange}
+              isInvalid={!!errors.return_period}
             />
             <Form.Control.Feedback type="invalid">
               {errors.return_period}
@@ -333,6 +338,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="category_id"
               value={newProduct.category_id}
               onChange={handleInputChange}
+              isInvalid={!!errors.category_id}
             >
               <option value="">Select Category</option>
               {categories.map((category) => (
@@ -354,6 +360,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="description"
               value={newProduct.description}
               onChange={handleInputChange}
+              isInvalid={!!errors.description}
             />
              <Form.Control.Feedback type="invalid">
               {errors.description}
@@ -368,6 +375,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="recipient_type"
               value={newProduct.recipient_type}
               onChange={handleInputChange}
+              isInvalid={!!errors.recipient_type}
             />
             <Form.Control.Feedback type="invalid">
               {errors.recipient_type}
@@ -382,6 +390,7 @@ function AddProductModal({ errors, categories,show, handleClose, handleInputChan
               name="materials"
               value={newProduct.materials}
               onChange={handleInputChange}
+              isInvalid={!!errors.materials}
             />
              <Form.Control.Feedback type="invalid">
               {errors.materials}

@@ -10,15 +10,27 @@ export default function LoginForm() {
   const [accountType, setAccountType] = useState('customer'); // customer, business, admin
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("")
+  const [errors, setErrors] = useState({});
   const nav = useNavigate();
   const {login,user} = useAuth();
 
   async function handleSubmit(event) {
     event.preventDefault();
     // Placeholder for submit logic
+    const newErrors = {};
+    if (!username) newErrors.username = 'Username is required';
+    if (!password) newErrors.password = 'Password is required';
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
     const res = await login(username,password);
     if(res.error) {
       console.log("error during login");
+      setErrors({ ...errors, form: 'Invalid username or password' });
+      return;
     }
     // const {user} = useAuth();
     // console.log(user)
@@ -60,7 +72,7 @@ export default function LoginForm() {
           </div>
           <div className="form-container">
           <div className={`form-slide ${formType === 'login' ? 'form-slide-active' : 'form-slide-left'}`}>
-            <LoginFormComponent handleForm={handleSubmit} setPassword={setPassword} setUsername={setUsername}/>
+            <LoginFormComponent handleForm={handleSubmit} setPassword={setPassword} setUsername={setUsername} errors={errors}/>
           </div>
           <div className={`form-slide ${formType === 'register' ? 'form-slide-active' : 'form-slide-right'}`}>
             <RegisterForm/>
