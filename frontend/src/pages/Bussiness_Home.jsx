@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import image from '../../DB_html/assets/img/dogs/image3.jpeg';
-import img2 from '../../DB_html/assets/img/dogs/image2.jpeg';
+import image from '../assets/img_placeholder.png';
+import img2 from '../assets/img_placeholder.png';
 import { useAuth } from '../context/authcontext';
 import axios from 'axios';
 import { Button, Form, Modal } from 'react-bootstrap';
@@ -230,7 +230,7 @@ function ProductList(props) {
   const imageURL = "http://localhost:8080/product/photo/"
   console.log(products);
   const productItems = products.map(product => (
-    <div key={product.id} className="col-md-4 mb-2 justify-items-center">
+    <div key={product.p_id} className="col-md-4 mb-2 justify-items-center">
       <div className="card">
         <div className="row-md-6">
           <div>

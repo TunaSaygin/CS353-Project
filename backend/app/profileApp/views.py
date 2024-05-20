@@ -323,14 +323,14 @@ def redeem_gift_card(request):
 def get_gift_cards_of_customer(request):
     c_id = get_uid(request)
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM giftcard WHERE cust_id = %s AND redemption_date is NULL", [c_id])
+        cursor.execute("SELECT g.gift_id, g.cust_id, g.gift_amount, g.gift_message, g.creation_date, b.name FROM giftcard g JOIN profile b ON b.id = g.business_id WHERE cust_id = %s AND redemption_date is NULL", [c_id])
         rows = cursor.fetchall()
         if rows:
             columns = [col[0] for col in cursor.description]
             res = [dict(zip(columns, row)) for row in rows]
             print(res)
             return Response(res, status=200)
-    return Response({'error': 'Customer has no gift cards'}, status=404)
+    return Response([], status=200)
 
 @api_view(['POST'])
 @permission_classes([CustomPermission])
@@ -445,3 +445,21 @@ def update_balance(request):
                 return Response({'error': 'Error updating the balance'}, status=500)
         else:
             return Response({'error': 'Customer not found'}, status=404)
+        
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def get_gift_cards_from_business(request):
+    try:
+        b_id = get_uid(request)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT g.gift_id, g.cust_id, g.gift_amount, g.gift_message, g.creation_date, g.redemption_date, p.name FROM giftcard g JOIN profile p ON p.id = g.cust_id WHERE g.business_id = %s", [b_id])
+            rows = cursor.fetchall()
+            if rows:
+                columns = [col[0] for col in cursor.description]
+                res = [dict(zip(columns, row)) for row in rows]
+                print(res)
+                return Response(res, status=200)
+            return Response([], status=200)
+    except Exception as e:
+        return Response({'message': str(e)}, status=500)
+

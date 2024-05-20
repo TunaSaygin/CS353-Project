@@ -50,13 +50,13 @@ function Wishlist() {
             deleteItem(id);
     };
 
-    const addToCart = id => {
-        setProducts(products.map(product => {
-            if (product.id === id) {
-                return { ...product, inCart: true };
-            }
-            return product;
-        }));
+    const addToCart = async (id) => {
+        try {
+            const response = await axios.post(`${baseURL}add-to-cart/`, {product_id: id, quantity: 1});
+        }
+        catch(error) {
+            setError(error);
+        }
     };
 
     if(error) {

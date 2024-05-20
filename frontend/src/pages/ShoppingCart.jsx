@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import image from '../../DB_html/assets/img/dogs/image2.jpeg';
+import image from '../assets/img_placeholder.png';
 import axios from "axios";
 import { useAuth } from "../context/authcontext";
 
@@ -8,6 +8,7 @@ export default function ShoppingCart() {
     const [error, setError] = useState(null);
     const {reloadProfileChanges} = useAuth();
     const baseURL = "http://localhost:8080/purchase/";
+    const imageURL = "http://localhost:8080/product/photo/";
     const token = window.localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     const imageURL = "http://localhost:8080/product/photo/";
@@ -79,7 +80,7 @@ export default function ShoppingCart() {
     }
 
     return (
-        <div className="card">
+        <div className="card row-md-6">
             <div className="row justify-content-center d-flex">
                 <div className="col-md-10 cart">
                     <div className="title">
@@ -100,10 +101,8 @@ export default function ShoppingCart() {
                                 // />
                                 <div key={product.p_id} className="row border-top border-bottom">
                                     <div className="row main align-items-center">
-                                        <div className="col-2">
-                                            {product.photo_name ? 
-                                            <img className="img-fluid rounded-start rounded-end" src={`${imageURL}${product.photo_name}/`} alt={product.name} />
-                                            :<img className="img-fluid rounded-start rounded-end" src={image} alt={product.name} />}
+                                        <div className="col-md-3">
+                                            {product.photo_metadata ? <img style={{height:'40vh'}} className="img-fluid rounded-start rounded-end" src={`${imageURL}${product.photo_metadata}`}></img> : <img style={{height:'40vh'}} className="img-fluid rounded-start rounded-end" src={image} alt={product.name} />}
                                         </div>
                                         <div className="col">
                                             {/* <div className="row text-muted">Shirt</div> */}
@@ -127,7 +126,7 @@ export default function ShoppingCart() {
                     {prods.length > 0 && (
                     <div className="row">
                         <div className="col text-right">
-                            <button onClick={handlePurchase} className="btn btn-primary">Proceed to Purchase</button>
+                            <button onClick={handlePurchase} className="btn btn-primary mt-3">Proceed to Purchase</button>
                         </div>
                     </div>
                 )}
