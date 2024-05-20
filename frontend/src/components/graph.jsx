@@ -2,20 +2,22 @@ import React, { useState } from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Nav } from 'react-bootstrap';
+import chroma from 'chroma-js';
+
+const generateColors = (size) => {
+  // Generate 'size' number of colors using chroma-js
+  const scale = chroma.scale(['#FF6384', '#36A2EB', '#FFCE56', '#E7E9ED', '#4BC0C0']).mode('lch').colors(size);
+  return scale;
+};
 const CategoryPopularityChart = ({labels,valueList}) => {
+  const backgroundColor = generateColors(labels.length);
   const data = {
-    labels: ['Electronics', 'Books', 'Clothing', 'Home Appliances', 'Toys'],
+    labels: labels,
     datasets: [
       {
         label: 'Category Popularity',
-        data: [120, 150, 90, 70, 40], // Mock popularity data
-        backgroundColor: [
-          '#FF6384',
-          '#36A2EB',
-          '#FFCE56',
-          '#E7E9ED',
-          '#4BC0C0',
-        ],
+        data: valueList,
+        backgroundColor: backgroundColor,
         hoverOffset: 4,
       },
     ],
@@ -25,22 +27,15 @@ const CategoryPopularityChart = ({labels,valueList}) => {
 };
 
 const BusinessSalesChart = ({labels,valueList}) => {
+  const backgroundColor = generateColors(labels.length);
   const data = {
-    labels: ['Business A', 'Business B', 'Business C'],
+    labels: labels,
     datasets: [
       {
         label: 'Sales',
-        data: [300, 250, 400], // Mock sales data
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-        ],
-        borderColor: [
-          'rgba(255,99,132,1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-        ],
+        data: valueList, // Mock sales data
+        backgroundColor:  backgroundColor.map(color => chroma(color).alpha(0.2).css()),
+        borderColor: backgroundColor,
         borderWidth: 1,
       },
     ],
@@ -56,9 +51,15 @@ const BusinessSalesChart = ({labels,valueList}) => {
 
   return <Bar data={data} options={options} />;
 };
-const Dashboard = () => {
-const [activeTab,setActiveTab] = useState("category_chart");
-const chartStyle = {
+const Dashboard = ({categoryData,businessData}) => {
+  console.log("categoryData:",categoryData)
+  const categoryLabels = categoryData.map(category => category.category_name);
+  const categoryValues = categoryData.map(category => category.total_price);
+
+  const businessLabels = businessData.map(business => business.name);
+  const businessValues = businessData.map(business => business.total_price);
+  const [activeTab,setActiveTab] = useState("category_chart");
+  const chartStyle = {
     width: '500px', // or whatever width you prefer
     // height: '50%', // or whatever height you prefer
     margin: 'auto' // this centers the chart in the div
@@ -75,10 +76,10 @@ const chartStyle = {
         </Nav>
       {activeTab == "category_chart"?<div style={chartStyle}>
         <h2>Category Popularity</h2>
-        <CategoryPopularityChart />
+        <CategoryPopularityChart labels={categoryLabels} valueList={categoryValues}/>
       </div>:<div style={chartStyle}>
         <h2>Business Sales</h2>
-        <BusinessSalesChart />
+        <BusinessSalesChart labels={businessLabels} valueList={businessValues}/>
       </div>}
     </div>
   );

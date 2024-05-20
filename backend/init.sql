@@ -36,8 +36,6 @@ CREATE TABLE report (
     admin_id INT NOT NULL,
     description TEXT,
     report_time TIMESTAMP,
-    graph_data BYTEA NOT NULL,
-    graph_metadata VARCHAR(150) NOT NULL,
     FOREIGN KEY (admin_id) REFERENCES admin(id)
 );
 
