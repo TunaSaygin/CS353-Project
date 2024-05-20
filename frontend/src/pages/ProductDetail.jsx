@@ -30,7 +30,7 @@ export default function ProductDetail({hideButtons, id}) {
                 <div className="col-lg-8">
                     <div className="card">
                         <div className="row">
-                            {data ? <Product name={data.name} hideButtons={hideButtons} price={data.current_price} image_name={data.photo_metadata}></Product>: <></>}
+                            {data ? <Product name={data.name} hideButtons={hideButtons} price={data.current_price} image_name={data.photo_metadata} business_name={data.business_name} inventory={data.inventory} description={data.description}></Product>: <></>}
                         </div>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ function Product(props) {
         e.preventDefault();
         console.log("added to the favs");
     }
-    const{name, about, price, username, hideButtons, image_name} = props;
+    const{name, about, price, hideButtons, image_name, business_name, inventory, description} = props;
     return (
         <>
             <div className="col-lg-6">
@@ -63,15 +63,17 @@ function Product(props) {
             <div className="col-lg-6">
                 <div className="product p-4">
                     <div className="mt-4 mb-3"> 
-                        <span className="text-muted brand">{username}</span>
+                        <span className="text-muted brand">Business: {business_name}</span>
                         <h5>{name}</h5>
-                        <span className="act-price">{price}₺</span>
+                        <p className="act-price">Price: {price}₺</p>
+                        <p className="act-price">Inventory: {inventory}</p>
+                        {description ? <p className="act-price">Description: {description}</p>: <></>}
                     </div>
                     <p className="about">{about}</p>
-                    {hideButtons || <div className="cart mt-4 align-items-center"> 
+                    {/* {hideButtons || <div className="cart mt-4 align-items-center"> 
                         <button onClick={handleCart} className="btn btn-primary mr-2 px-4">Add to cart<i className="fa fa-shopping-cart m-2"></i></button> 
                         <button onClick={handleFavorites} className="btn btn-danger m-2"><i className="fa fa-heart"></i></button>
-                    </div>}
+                    </div>} */}
                 </div>
             </div>
         </>

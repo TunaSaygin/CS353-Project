@@ -104,11 +104,12 @@ def view_product(request, selected_pid):
     # Fetching details of the selected product
     with connection.cursor() as cursor:
         cursor.execute("""
-               SELECT h.name, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, c.category_name
+               SELECT h.name, h.description, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, c.category_name, p1.name as business_name
                FROM handcraftedgood h
                LEFT JOIN productphoto p ON h.p_id = p.p_id
                LEFT JOIN belong b ON h.p_id = b.p_id
                LEFT JOIN category c ON b.category_id = c.category_id
+               LEFT JOIN profile p1 ON p1.id = h.b_id
                LEFT JOIN (
                    SELECT p_id, price AS price
                    FROM pastprice
