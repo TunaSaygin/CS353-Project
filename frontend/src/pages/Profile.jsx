@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Button, Form, Container, Row, Col, Image, Nav, InputGroup, FormControl } from 'react-bootstrap';
 import { useAuth } from '../context/authcontext';
 import axios from 'axios';
@@ -15,12 +15,28 @@ export default function Profile() {
     // bio: 'A short bio here',
     email: 'john.doe@example.com',
   });
-  const [pastPurchases, setPastPurchases] = useState([
-    // Mock data for past purchases
-    { id: 1, title: "Purchase 1", date: "2023-01-01", isReturned:true },
-    { id: 2, title: "Purchase 2", date: "2023-01-02", isReturned:false },
-    // ... other purchases
-  ]);
+  const [pastPurchases, setPastPurchases] = useState([]);
+
+  useEffect(() => {
+    const fetchPurchaseHistory = async () => {
+      try {
+        if (user.acc_type === 'customer'){
+        const response = await axios.get(`${baseUrl}/purchase/get-purchase-hist`);
+        setPastPurchases(response.data.purchases);
+        console.log(response.data.purchases);
+        }
+        else if (user.acc_type === 'business'){
+          const bresponse = await axios.get(`${baseUrl}/purchase/get-business-purchase-hist`);
+          setPastPurchases(bresponse.data.purchases);
+          console.log(bresponse.data.purchases);
+        }
+      } catch (error) {
+        console.error('Error fetching purchase history:', error);
+      }
+    };
+
+    fetchPurchaseHistory();
+  }, [baseUrl]);
 
   const handleEditToggle = () => {
     editing || setEditableProfile({...user, username:user.name, image: user.image_name ? user.image_name : profile.image});
@@ -61,9 +77,19 @@ export default function Profile() {
       console.error('Error updating profile:', error);
     }
   };
-  const handleReturn = (id) =>{
-    console.log(`Purchased product with ID ${id} is returned`);
-  }
+  const handleReturn = async (p_id, p_date) => {
+    console.log(`Purchased product with ID ${p_id} is returned`);
+    try {
+      if (user.acc_type === 'customer'){
+          await axios.post(`${baseUrl}/product/returnProduct`, { p_id, p_date });
+      }
+      // Refetch purchase history
+      const response = await axios.get(`${baseUrl}/purchase/get-purchase-hist`);
+      setPastPurchases(response.data.purchases);
+    } catch (error) {
+      console.error('Error returning product:', error);
+    }
+  };
   return (
     <Container>
       <Row className="justify-content-md-center my-4">
@@ -113,55 +139,61 @@ export default function Profile() {
               </Row>
             </Card.Body>
           </Card>
-          <Nav variant="tabs" activeKey={activeTab} onSelect={setActiveTab} className="mb-3">
-            <Nav.Item>
-              <Nav.Link eventKey="past_purchases">Past Purchase</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="returned_items">Returned Items</Nav.Link>
-            </Nav.Item>
-          </Nav>
+          {user.acc_type !== 'admin' && (
+            <>
+              <Nav variant="tabs" activeKey={activeTab} onSelect={setActiveTab} className="mb-3">
+                <Nav.Item>
+                  <Nav.Link eventKey="past_purchases">Past Purchase</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="returned_items">Returned Items</Nav.Link>
+                </Nav.Item>
+              </Nav>
 
-          <InputGroup className="mb-3">
-            <FormControl
-              placeholder="Search..."
-              onChange={handleSearch}
-            />
-          </InputGroup>
-          {activeTab=="past_purchases" ?
-          <>
-          <h3>Past Purchases</h3>
-          <Row xs={1} md={2} lg={3} className="g-4">
-            {pastPurchases.filter(purchase=>!purchase.isReturned).map(purchase => (
-              <Col key={purchase.id}>
-                <Card>
-                  <Card.Body>
-                    <Card.Title>{purchase.title}</Card.Title>
-                    <Card.Text>Date: {purchase.date}</Card.Text>
-                    <Button variant='danger' onClick={()=>{handleReturn(purchase.id)}}> Return Product</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          </>:
-          <>
-          <h3>Returned Items</h3>
-          <Row xs={1} md={2} lg={3} className="g-4">
-            {pastPurchases.filter(purchase=>purchase.isReturned).map(purchase => (
-              <Col key={purchase.id}>
-                <Card>
-                  <Card.Body>
-                    <Card.Title>{purchase.title}</Card.Title>
-                    <Card.Text>Date: {purchase.date}</Card.Text>
-                    <Button variant='danger' onClick={()=>{handleReturn(purchase.id)}}> Return Product</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          </>
-          }
+              <InputGroup className="mb-3">
+                <FormControl
+                  placeholder="Search..."
+                  onChange={handleSearch}
+                />
+              </InputGroup>
+
+              {activeTab === "past_purchases" ?
+                <>
+                  <h3>Past Purchases</h3>
+                  <Row xs={1} md={2} lg={3} className="g-4">
+                    {pastPurchases.filter(purchase => (purchase.return_date == null)).map((purchase, index) => (
+                      <Col key={index}>
+                        <Card>
+                          <Card.Body>
+                            <Card.Title>{purchase.product_name}</Card.Title>
+                            <Card.Text>Date: {purchase.p_date}</Card.Text>
+                            {user.acc_type === 'customer' && <Button variant='danger' onClick={() => { handleReturn(purchase.p_id, purchase.p_date) }}> Return Product</Button>}
+                            {user.acc_type === 'business' && <Card.Text>{purchase.delivery_address}</Card.Text>}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </> :
+                <>
+                  <h3>Returned Items</h3>
+                  <Row xs={1} md={2} lg={3} className="g-4">
+                    {pastPurchases.filter(purchase => !(purchase.return_date == null)).map((purchase, index) => (
+                      <Col key={index}>
+                        <Card>
+                          <Card.Body>
+                            <Card.Title>{purchase.product_name}</Card.Title>
+                            <Card.Text>Date: {purchase.p_date}</Card.Text>
+                            
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </>
+              }
+            </>
+          )}
         </Col>
       </Row>
     </Container>
