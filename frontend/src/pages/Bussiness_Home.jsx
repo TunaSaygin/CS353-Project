@@ -14,6 +14,7 @@ export default function BusinessHome() {
   const token = window.localStorage.getItem("token");
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   const [showModal, setShowModal] = useState(false);
+  const [errors, setErrors] = useState({});
   const [newProduct, setNewProduct] = useState({
     inventory: '',
     current_price: '',
@@ -74,7 +75,20 @@ export default function BusinessHome() {
     setShowModal(true);
   };
   const handleCloseModal = () => setShowModal(false);
-
+  const validateForm = () => {
+    const newErrors = {};
+    if (!newProduct.name) newErrors.name = 'Product Name is required';
+    if (!newProduct.current_price || newProduct.current_price<=0) newErrors.current_price = 'Current Price is required';
+    if (!newProduct.inventory || newProduct.inventory<=0) newErrors.inventory = 'Inventory is required';
+    if (!newProduct.return_period || newProduct.return_period<=0) newErrors.return_period = 'Return Period is required';
+    if (!newProduct.category_id ) newErrors.category_id = 'Category is required';
+    if (!newProduct.description) newErrors.description = 'Description is required';
+    if (!newProduct.recipient_type) newErrors.recipient_type = 'Recipient Type is required';
+    if (!newProduct.materials) newErrors.materials = 'Materials are required';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProduct({ ...newProduct, [name]: value });
@@ -82,6 +96,9 @@ export default function BusinessHome() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     try {
       const formData = new FormData();
       Object.keys(newProduct).forEach((key) => {
@@ -165,6 +182,7 @@ export default function BusinessHome() {
       <ProductList products={products} handleShowModal={handleShowModal}></ProductList>
       <AddProductModal
         show={showModal}
+        isUpdating={isUpdating}
         handleClose={handleCloseModal}
         handleInputChange={handleInputChange}
         handleFormSubmit={handleFormSubmit}
@@ -174,6 +192,7 @@ export default function BusinessHome() {
         handleDrop={handleDrop}
         categories={categories}
         imageFile={imageFile}
+        errors={errors}
       />
     </div>
   );
@@ -244,7 +263,7 @@ function ProductList(props) {
     </div>
   );
 }
-function AddProductModal({ categories,show, handleClose, handleInputChange, handleFormSubmit, newProduct, handleFileChange, handleDragOver, handleDrop, imageFile, isUpdating }) {
+function AddProductModal({ errors, categories,show, handleClose, handleInputChange, handleFormSubmit, newProduct, handleFileChange, handleDragOver, handleDrop, imageFile, isUpdating }) {
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
@@ -261,6 +280,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.name}
               onChange={handleInputChange}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.name}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formProductPrice">
@@ -272,6 +294,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.current_price}
               onChange={handleInputChange}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.current_price}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formProductInventory">
@@ -283,6 +308,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.inventory}
               onChange={handleInputChange}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.inventory}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formReturnPeriod">
@@ -294,6 +322,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.return_period}
               onChange={handleInputChange}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.return_period}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group className="mb-3" controlId="formCategory">
             <Form.Label>Category</Form.Label>
@@ -310,6 +341,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
                 </option>
               ))}
             </Form.Control>
+            <Form.Control.Feedback type="invalid">
+              {errors.category_id}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group className="mb-3" controlId="formProductDescription">
             <Form.Label>Description</Form.Label>
@@ -321,6 +355,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.description}
               onChange={handleInputChange}
             />
+             <Form.Control.Feedback type="invalid">
+              {errors.description}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formRecipientType">
@@ -332,6 +369,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.recipient_type}
               onChange={handleInputChange}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.recipient_type}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formMaterials">
@@ -343,6 +383,9 @@ function AddProductModal({ categories,show, handleClose, handleInputChange, hand
               value={newProduct.materials}
               onChange={handleInputChange}
             />
+             <Form.Control.Feedback type="invalid">
+              {errors.materials}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group controlId="formFile" className="mb-3">

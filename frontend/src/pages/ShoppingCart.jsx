@@ -11,7 +11,7 @@ export default function ShoppingCart() {
     const imageURL = "http://localhost:8080/product/photo/";
     const token = window.localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
+    const imageURL = "http://localhost:8080/product/photo/";
     useEffect(() => {
         const fetchData = async () => {
             try {
