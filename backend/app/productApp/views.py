@@ -302,7 +302,10 @@ def list_categories(request):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                            SELECT * FROM category
+                            SELECT c.*,(select sum(hg.inventory) as total_inventory from handcraftedgood hg,
+                                belong bel
+                                WHERE hg.p_id = bel.p_id AND c.category_id = bel.category_id  
+                           ) FROM category c
             """,[])
             rows = cursor.fetchall()
             columns = [col[0] for col in cursor.description]
