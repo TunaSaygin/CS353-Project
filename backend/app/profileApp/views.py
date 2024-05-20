@@ -1,5 +1,5 @@
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+# from django.shortcuts import render
 # from .serializers import MyTokenObtainPairSerializer
 # from rest_framework import generics
 from rest_framework.decorators import api_view
@@ -13,23 +13,11 @@ from django.db import connection
 import jwt
 from datetime import date, datetime, timedelta
 from django.conf import settings
-from django.db import transaction
-from profileApp.custom_permission import CustomPermission
+from .custom_permission import CustomPermission, get_uid
 import uuid
 import mimetypes
 import psycopg2
-from profileApp.custom_permission import get_uid
 
-# Create your views here.
-#Login User
-# class MyTokenObtainPairView(TokenObtainPairView):
-#     serializer_class = MyTokenObtainPairSerializer
-
-#Register User
-# class RegisterView(generics.CreateAPIView):
-#     queryset = Profile.objects.all()
-#     permission_classes = (AllowAny,)
-#     serializer_class = RegisterSerializer
 
 @api_view(['POST'])
 def custom_register(request):
@@ -39,21 +27,22 @@ def custom_register(request):
     image_metadata = request.data.get('image_metadata', None)
     image_blob = request.data.get('image_blob', None)
     acc_type = request.data.get('acc_type')
-    
+
     if username is None or password is None or email is None:
         return Response({'error': 'Email, name, or password fields cannot be null.'}, status=400)
-    
-    with transaction.atomic():  # Start a database transaction
-        with connection.cursor() as cursor:
+
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute('BEGIN TRANSACTION;')
             cursor.execute("""
                 INSERT INTO profile (name, email, password, image_metadata, image_blob)
                 VALUES (%s, %s, %s, %s, %s)
                 RETURNING id, name, email, password, image_metadata, image_blob
             """, [username, email, password, image_metadata, image_blob])
-            
+
             row = cursor.fetchone()
-            id = row[0]
-            
+            pr_id = row[0]
+
             if acc_type == 'customer':
                 balance = 0
                 delivery_address = request.data.get('delivery_address')
@@ -61,31 +50,32 @@ def custom_register(request):
                     INSERT INTO customer (id, balance, delivery_address)
                     VALUES (%s, %s, %s)
                     RETURNING balance, delivery_address
-                """, [id, balance, delivery_address])
-                
-                r = cursor.fetchone()
+                """, [pr_id, balance, delivery_address])
+
             elif acc_type == 'business':
                 iban = request.data.get('iban')
                 cursor.execute("""
                     INSERT INTO business (id, IBAN, income)
                     VALUES (%s, %s,0)
                     RETURNING id, IBAN
-                """, [id, iban])
-                
-                r = cursor.fetchone()
+                """, [pr_id, iban])
+
             else:
+                cursor.execute('ROLLBACK;')
                 return Response({'error': 'Invalid account type'}, status=404)
-        # Commit the transaction explicitly
-    transaction.commit()
-    
+            cursor.execute('COMMIT;')
+
+        except Exception as e:
+            cursor.execute('ROLLBACK;')
+            return Response({'error': str(e)}, status=500)
+
     payload = {
-        'user_id': id,
+        'user_id': pr_id,
         'exp': datetime.utcnow() + timedelta(days=1)
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-    
-    return Response({'token': token,'name':username ,'email': email, 'id': id, 'acc_type': acc_type}, status=200)
 
+    return Response({'token': token, 'name': username, 'email': email, 'id': pr_id, 'acc_type': acc_type}, status=200)
 
 
 @api_view(['POST'])
@@ -123,7 +113,7 @@ def custom_login(request):
                 cus = cursor.fetchone()
                 if cus:
                     return Response({'token': token, 'id': cus[0],'email':email ,'name': user_name, 'balance': cus[1], 'delivery_address': cus[2], 'acc_type': 'customer','image_name':image_name})
-                
+
                 cursor.execute("""
                             SELECT id, income, IBAN
                             FROM business
@@ -137,7 +127,7 @@ def custom_login(request):
                 if admin:
                     return Response({'token': token, 'id': user_id, 'email': email, 'acc_type': 'admin', 'name':user_name})
                 return Response({'error': 'Account type needed'}, status=400)
-           
+
             else:
                 return Response({'error': 'Invalid credentials'}, status=400)
         else:
@@ -168,7 +158,7 @@ def getProfile(request):
             email = row[2]
             return Response({'name': username, 'id': user_id, 'email': email}, status=200)
         return Response({'error': 'Error'}, status=404)
-            
+
 
 # @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])
@@ -184,7 +174,7 @@ def getProfile(request):
 # def updateProfile(request):
 #     user = request.user
 #     serializer = ProfileSerializer(user, data=request.data, partial=True)
-    
+
 #     if serializer.is_valid():
 #         # Extracting data from serializer
 #         validated_data = serializer.validated_data
@@ -211,20 +201,20 @@ def getProfile(request):
 #         return Response(profile_data)
 #     else:
 #         return Response(serializer.errors, status=400)
-    
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def verify_business(request):
     if request.method == 'POST':
         try:
             data = request.data
-            
+
             business_id = data.get('business_id')
-            admin_id = data.get('admin_id') 
-            
+            admin_id = data.get('admin_id')
+
             if not business_id or not admin_id:
                 return Response({'error': 'business_id and admin_id are required'}, status=400)
-            
+
             verification_date = date.today()
 
             with connection.cursor() as cursor:
@@ -233,13 +223,13 @@ def verify_business(request):
                     SET verifying_admin = %s, verification_date = %s
                     WHERE id = %s
                 """, [admin_id, verification_date, business_id])
-            
+
             return Response({'message': 'Business verified successfully'}, status=200)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
-    
+
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def get_unverified_businesses(request):
@@ -256,15 +246,15 @@ def get_unverified_businesses(request):
                     dict(zip(columns, row))
                     for row in rows
                 ]
-            
+
             return Response(businesses, status=200)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
-    
 
-    
+
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def generate_gift_card(request):
@@ -286,7 +276,7 @@ def generate_gift_card(request):
                 return Response({'error': 'No customer purchased your products'}, status=404)
         else:
             return Response({'error': 'Invalid business id. You are not allowed.'}, status=403)
-    
+
 
 @api_view(['POST'])
 @permission_classes([CustomPermission])
@@ -315,8 +305,8 @@ def redeem_gift_card(request):
                 return Response({'error': 'Error updating the giftcard table'}, status=500)
         else:
             return Response({'error': 'Error getting the gift card'}, status=404)
-        
-            
+
+
 
 @api_view(['GET'])
 @permission_classes([CustomPermission])
@@ -357,7 +347,7 @@ def upload_profile_photo(request):
         return Response({'message': 'Image successfully uploaded'}, status=201)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def update_profile(request):
@@ -394,9 +384,9 @@ def update_profile(request):
         return Response({'message': 'Profile updated successfully'}, status=200)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
-    
 
-@api_view(['GET'])    
+
+@api_view(['GET'])
 def view_profile_photo(request,image_metadata):
     print(image_metadata)
     try:
@@ -423,7 +413,7 @@ def view_profile_photo(request,image_metadata):
         return HttpResponse(photo_blob, content_type=mime_type)
     except Exception as e:
         return Response(f'Error retrieving image: {str(e)}', status=500)
-    
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def update_balance(request):
@@ -445,7 +435,7 @@ def update_balance(request):
                 return Response({'error': 'Error updating the balance'}, status=500)
         else:
             return Response({'error': 'Customer not found'}, status=404)
-        
+
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def get_gift_cards_from_business(request):

@@ -1,9 +1,8 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+# from django.shortcuts import render
 from django.db import connection
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 import psycopg2
-from django.db import transaction
 from django.http import HttpResponse
 import uuid
 import mimetypes
@@ -12,79 +11,96 @@ from rest_framework.decorators import permission_classes
 from profileApp.custom_permission import CustomPermission, get_uid
 
 
-
-# Create your views here.
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def create_product(request):
-    if request.method == 'POST':
-        try:
-            data = request.data
-
-            b_id = get_uid(request)
-            inventory = data.get('inventory')
-            current_price = data.get('current_price')
-            name = data.get('name')
-            return_period = data.get('return_period')
-            description = data.get('description')
-            recipient_type = data.get('recipient_type')
-            materials = data.get('materials')
-            category_id = data.get('category_id')
-            print("b_id",b_id,"/inventory:",inventory,"name",name)
-            with transaction.atomic():
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        INSERT INTO handcraftedgood (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        RETURNING p_id
-                    """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
-                    p_id = cursor.fetchone()[0]
-                    
-                    cursor.execute(""" INSERT INTO belong VALUES(%s,%s)
-                                """,[category_id,p_id])
-                return Response({'message': 'Product created successfully','p_id': p_id}, status=201)
-        except Exception as e:
-            return Response({'error': str(e)}, status=400)
-    else:
+    if request.method != 'POST':
         return Response({'error': 'Invalid request method'}, status=405)
+    try:
+        data = request.data
+        b_id = get_uid(request)
+        inventory = data.get('inventory')
+        current_price = data.get('current_price')
+        name = data.get('name')
+        return_period = data.get('return_period')
+        description = data.get('description')
+        recipient_type = data.get('recipient_type')
+        materials = data.get('materials')
+        category_id = data.get('category_id')
+        print("b_id", b_id, "/inventory:", inventory, "name", name)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute('BEGIN TRANSACTION;')
+            cursor.execute("""
+                INSERT INTO handcraftedgood
+                    (b_id, inventory, current_price, name, return_period, description, recipient_type, materials)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING p_id
+            """, [b_id, inventory, current_price, name, return_period, description, recipient_type, materials])
+            p_id = cursor.fetchone()[0]
+            cursor.execute("""
+                INSERT INTO belong VALUES(%s,%s)
+            """, [category_id, p_id])
+
+            cursor.execute('COMMIT;')
+
+            return Response({'message': 'Product created successfully', 'p_id': p_id}, status=201)
+        except Exception as e:
+            cursor.execute('ROLLBACK;')
+            return Response({'error': str(e)}, status=400)
+
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def update_product(request):
-    if request.method == 'POST':
-        try:
-            data = request.data
-
-            p_id = data.get('p_id')
-            b_id = get_uid(request)
-            inventory = data.get('inventory')
-            current_price = data.get('current_price')
-            name = data.get('name')
-            return_period = data.get('return_period')
-            description = data.get('description')
-            recipient_type = data.get('recipient_type')
-            materials = data.get('materials')
-            category_id = data.get('category_id')
-            with transaction.atomic():
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        UPDATE handcraftedgood
-                        SET inventory = %s, current_price = %s, name = %s, return_period = %s, description = %s, recipient_type = %s, materials = %s
-                        WHERE p_id = %s AND b_id = %s
-                    """, [inventory, current_price, name, return_period, description, recipient_type, materials, p_id, b_id])
-                    cursor.execute("""
-                        WITH upsert AS(
-                                   UPDATE belong  SET category_id=%s
-                                   WHERE p_id = %s
-                                    RETURNING *
-                        )
-                        INSERT INTO belong(category_id,p_id) SELECT %s, %s
-                                   WHERE NOT EXISTS (SELECT 1 FROM upsert)     
-                                   """,[category_id,p_id,category_id,p_id,])
-                return Response({'message': 'Product updated successfully'}, status=200)
-        except Exception as e:
-            return Response({'error': str(e)}, status=400)
-    else:
+    if request.method != 'POST':
         return Response({'error': 'Invalid request method'}, status=405)
+    try:
+        data = request.data
+
+        p_id = data.get('p_id')
+        b_id = get_uid(request)
+        inventory = data.get('inventory')
+        current_price = data.get('current_price')
+        name = data.get('name')
+        return_period = data.get('return_period')
+        description = data.get('description')
+        recipient_type = data.get('recipient_type')
+        materials = data.get('materials')
+        category_id = data.get('category_id')
+        print("b_id", b_id, "/inventory:", inventory, "name", name)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute('BEGIN TRANSACTION;')
+
+            cursor.execute("""
+                UPDATE handcraftedgood
+                SET inventory = %s, current_price = %s, name = %s, return_period = %s, description = %s, recipient_type = %s, materials = %s
+                WHERE p_id = %s AND b_id = %s
+            """, [inventory, current_price, name, return_period, description, recipient_type, materials, p_id, b_id])
+
+            cursor.execute("""
+                WITH upsert AS(
+                    UPDATE belong SET category_id = %s
+                    WHERE p_id = %s
+                    RETURNING *
+                )
+                INSERT INTO belong(category_id,p_id) SELECT %s, %s
+                    WHERE NOT EXISTS (SELECT 1 FROM upsert) 
+            """, [category_id, p_id, category_id, p_id])
+
+            cursor.execute('COMMIT;')
+
+            return Response({'message': 'Product updated successfully'}, status=200)
+        except Exception as e:
+            cursor.execute('ROLLBACK;')
+            return Response({'error': str(e)}, status=400)
+
+
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def add_product_photo(request):
