@@ -10,7 +10,7 @@ export default function ShoppingCart() {
     const baseURL = "http://localhost:8080/purchase/";
     const token = window.localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
+    const imageURL = "http://localhost:8080/product/photo/";
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -101,7 +101,9 @@ export default function ShoppingCart() {
                                 <div key={product.p_id} className="row border-top border-bottom">
                                     <div className="row main align-items-center">
                                         <div className="col-2">
-                                            <img className="img-fluid rounded-start rounded-end" src={image} alt={product.name} />
+                                            {product.photo_name ? 
+                                            <img className="img-fluid rounded-start rounded-end" src={`${imageURL}${product.photo_name}/`} alt={product.name} />
+                                            :<img className="img-fluid rounded-start rounded-end" src={image} alt={product.name} />}
                                         </div>
                                         <div className="col">
                                             {/* <div className="row text-muted">Shirt</div> */}
