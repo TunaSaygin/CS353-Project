@@ -108,7 +108,8 @@ export default function Navbar() {
                         />}
                         <div className="ms-2 align-items-center flex-column align-items-start justify-content-center text-left">
                           <div>{user.name}</div> {/* User's name */}
-                          <div className="text-muted" style={{ fontSize: '0.8em' }}>balance: ${user.balance}</div> {/* User's balance */}
+                          {user.acc_type === 'customer' && <div className="text-muted" style={{ fontSize: '0.8em' }}>balance: ${user.balance}</div> }{/* User's balance */}
+                          {user.acc_type === 'business' && <div className="text-muted" style={{ fontSize: '0.8em' }}>income: ${user.income}</div>}
                         </div>
                       </div>
                     </Dropdown.Toggle>

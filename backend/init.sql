@@ -96,6 +96,7 @@ CREATE TABLE purchase (
     p_date TIMESTAMP NOT NULL,
     p_price DECIMAL NOT NULL,
     return_date TIMESTAMP,
+    quantity INT DEFAULT 0,
     FOREIGN KEY (c_id) REFERENCES customer(id),
     FOREIGN KEY (p_id) REFERENCES handcraftedgood(p_id),
     PRIMARY KEY (c_id, p_id, p_date),
@@ -116,6 +117,8 @@ $$
         UPDATE business
         SET income = coalesce(income,0) + NEW.p_price
         WHERE id = v_bid;
+        UPDATE handcraftedgood SET inventory = inventory - NEW.quantity
+        WHERE p_id = NEW.p_id;
     ELSIF TG_OP = 'UPDATE' THEN
         IF NEW.return_date IS NOT NULL AND OLD.return_date is null THEN
             -- Get the current income of the business
@@ -126,6 +129,11 @@ $$
             UPDATE business
             SET income = income - OLD.p_price
             WHERE id = v_bid;
+            UPDATE customer
+            SET balance = balance + OLD.p_price
+            WHERE customer.id = OLD.c_id;
+            UPDATE handcraftedgood SET inventory = inventory + OLD.quantity
+            WHERE p_id = OLD.p_id;
         END IF;
     END IF;
     RETURN NEW;

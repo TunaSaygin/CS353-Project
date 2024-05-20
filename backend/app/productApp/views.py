@@ -62,15 +62,24 @@ def update_product(request):
             description = data.get('description')
             recipient_type = data.get('recipient_type')
             materials = data.get('materials')
-
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    UPDATE handcraftedgood
-                    SET inventory = %s, current_price = %s, name = %s, return_period = %s, description = %s, recipient_type = %s, materials = %s
-                    WHERE p_id = %s AND b_id = %s
-                """, [inventory, current_price, name, return_period, description, recipient_type, materials, p_id, b_id])
-            
-            return Response({'message': 'Product updated successfully'}, status=200)
+            category_id = data.get('category_id')
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE handcraftedgood
+                        SET inventory = %s, current_price = %s, name = %s, return_period = %s, description = %s, recipient_type = %s, materials = %s
+                        WHERE p_id = %s AND b_id = %s
+                    """, [inventory, current_price, name, return_period, description, recipient_type, materials, p_id, b_id])
+                    cursor.execute("""
+                        WITH upsert AS(
+                                   UPDATE belong  SET category_id=%s
+                                   WHERE p_id = %s
+                                    RETURNING *
+                        )
+                        INSERT INTO belong(category_id,p_id) SELECT %s, %s
+                                   WHERE NOT EXISTS (SELECT 1 FROM upsert)     
+                                   """,[category_id,p_id,category_id,p_id,])
+                return Response({'message': 'Product updated successfully'}, status=200)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
     else:

@@ -20,9 +20,16 @@ export default function Profile() {
   useEffect(() => {
     const fetchPurchaseHistory = async () => {
       try {
+        if (user.acc_type === 'customer'){
         const response = await axios.get(`${baseUrl}/purchase/get-purchase-hist`);
         setPastPurchases(response.data.purchases);
         console.log(response.data.purchases);
+        }
+        else if (user.acc_type === 'business'){
+          const bresponse = await axios.get(`${baseUrl}/purchase/get-business-purchase-hist`);
+          setPastPurchases(bresponse.data.purchases);
+          console.log(bresponse.data.purchases);
+        }
       } catch (error) {
         console.error('Error fetching purchase history:', error);
       }
@@ -73,7 +80,9 @@ export default function Profile() {
   const handleReturn = async (p_id, p_date) => {
     console.log(`Purchased product with ID ${p_id} is returned`);
     try {
-      await axios.post(`${baseUrl}/product/returnProduct`, { p_id, p_date });
+      if (user.acc_type === 'customer'){
+          await axios.post(`${baseUrl}/product/returnProduct`, { p_id, p_date });
+      }
       // Refetch purchase history
       const response = await axios.get(`${baseUrl}/purchase/get-purchase-hist`);
       setPastPurchases(response.data.purchases);
@@ -159,6 +168,7 @@ export default function Profile() {
                             <Card.Title>{purchase.product_name}</Card.Title>
                             <Card.Text>Date: {purchase.p_date}</Card.Text>
                             {user.acc_type === 'customer' && <Button variant='danger' onClick={() => { handleReturn(purchase.p_id, purchase.p_date) }}> Return Product</Button>}
+                            {user.acc_type === 'business' && <Card.Text>{purchase.delivery_address}</Card.Text>}
                           </Card.Body>
                         </Card>
                       </Col>

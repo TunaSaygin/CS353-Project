@@ -213,11 +213,11 @@ def purchase(request):
                 # Inserting purchase records into the purchase table
                 purchase_records = []
                 for item in cart_items:
-                    purchase_records.append((customer_id, item[0], datetime.now(), item[1] * item[2], None))
+                    purchase_records.append((customer_id, item[0], datetime.now(), item[1] * item[2], None,item[2]))
 
                 cursor.executemany("""
-                    INSERT INTO purchase (c_id, p_id, p_date, p_price, return_date)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO purchase (c_id, p_id, p_date, p_price, return_date, quantity)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """, purchase_records)
 
                 # Clearing the shopping cart after purchase
@@ -428,9 +428,10 @@ def get_business_purchase_history(request):
                 # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT purchase.c_id, purchase.p_date, purchase.p_id,
                                purchase.return_date,  p1.name as customer_name, p2.name as business_name,
-                               hg.name as product_name
+                               hg.name as product_name, c.delivery_address
                                FROM purchase 
                                JOIN profile p1 ON p1.id = purchase.c_id
+                               JOIN customer c ON c.id = p1.id
                                JOIN handcraftedgood hg ON hg.p_id = purchase.p_id
                                JOIN (select * from profile where id = %s) p2 ON p2.id = hg.b_id
                                """, [b_id])
