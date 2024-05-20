@@ -24,7 +24,12 @@ export default function GiftCardForm() {
     }
 
     if(error) {
-        return(<h3>{error.message}</h3>)
+        if (error.response.status === 404) {
+            return(<h3>No customer found that bought from you.</h3>)
+        }
+        else {
+            return(<h3>{error.message}</h3>);
+        }
     }
 
     return(<form onSubmit={(e)=>handleSubmit(e)}>

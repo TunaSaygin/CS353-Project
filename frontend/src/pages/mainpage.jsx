@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import image from '../../DB_html/assets/img/dogs/image3.jpeg';
+import image from '../assets/img_placeholder.png';
 import { Modal } from "react-bootstrap";
 import { useAsyncError, useNavigate } from "react-router-dom";
 import ProductDetail from "./ProductDetail";

@@ -96,18 +96,20 @@ def get_business_products(request):
 
 @api_view(['GET'])
 @permission_classes([CustomPermission])
-def view_product(request):
+def view_product(request, selected_pid):
     # Extracting selected product ID from request data
-    selected_pid = request.data.get('selected_pid')
+    #selected_pid = request.data.get('selected_pid')
+    print("selected_pid",selected_pid)
 
     # Fetching details of the selected product
     with connection.cursor() as cursor:
         cursor.execute("""
-               SELECT h.name, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, p.photo_blob, c.category_name
+               SELECT h.name, h.description, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, c.category_name, p1.name as business_name
                FROM handcraftedgood h
-               JOIN productphoto p ON h.p_id = p.p_id
-               JOIN belong b ON h.p_id = b.p_id
-               JOIN category c ON b.category_id = c.category_id
+               LEFT JOIN productphoto p ON h.p_id = p.p_id
+               LEFT JOIN belong b ON h.p_id = b.p_id
+               LEFT JOIN category c ON b.category_id = c.category_id
+               LEFT JOIN profile p1 ON p1.id = h.b_id
                LEFT JOIN (
                    SELECT p_id, price AS price
                    FROM pastprice
@@ -119,14 +121,25 @@ def view_product(request):
                ) pp ON h.p_id = pp.p_id
                WHERE h.p_id = %s
            """, [selected_pid, selected_pid])
-        product_details = cursor.fetchone()
+        product_details = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
 
-        if product_details:
-            return Response(product_details)
-        else:
-            return Response({'error': 'there is not enough product on the inventory'}, status=404)
+    if not product_details:
+        return Response({'error': 'there is not enough product on the inventory'}, status=404)
 
+    product = {}
+    categories = []
 
+    for row in product_details:
+        product_row = dict(zip(columns, row))
+        if not product:
+            product = {k: v for k, v in product_row.items() if k != 'category_name'}
+        if product_row['category_name']:
+            categories.append(product_row['category_name'])
+
+    product['categories'] = categories
+
+    return Response(product)
 
 
 @api_view(['POST'])

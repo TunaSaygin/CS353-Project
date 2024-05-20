@@ -208,3 +208,136 @@ def get_all_purchases(request):
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
+
+@api_view(['POST'])
+@permission_classes([CustomPermission])
+def create_report(request):
+    if request.method == 'POST':
+        try:
+            admin_id = get_uid(request)
+            data = request.data
+            description = data.get('description')
+            # Get customer ID from the request
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM admin WHERE id = %s
+                """, [admin_id])
+                is_admin = cursor.fetchone()[0]
+                logger.info(f"Is Admin: {is_admin}")
+
+                if not is_admin:
+                    return Response({'error': 'Permission denied'}, status=403)
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""INSERT INTO REPORT(admin_id, description, report_time)
+                               VALUES(%s,%s,NOW())
+                               """,[admin_id,description])
+            
+
+            return Response({"Message":" Report successfully created"}, status=201)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def list_reports(request):
+    if request.method == 'GET':
+        try:
+            user_id = get_uid(request)
+            # Get customer ID from the request
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM admin WHERE id = %s
+                """, [user_id])
+                is_admin = cursor.fetchone()[0]
+                logger.info(f"Is Admin: {is_admin}")
+
+                if not is_admin:
+                    return Response({'error': 'Permission denied'}, status=403)
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""SELECT r.report_id ,r.report_time,r.description ,p.name from report r
+                               JOIN profile p ON p.id = r.admin_id
+                               """,[])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the customers
+            reports = [dict(zip(columns, row)) for row in rows]
+
+            return Response(reports, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def view_category_reports(request,report_id):
+    if request.method == 'GET':
+        try:
+            user_id = get_uid(request)
+            # Get customer ID from the request
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM admin WHERE id = %s
+                """, [user_id])
+                is_admin = cursor.fetchone()[0]
+                logger.info(f"Is Admin: {is_admin}")
+
+                if not is_admin:
+                    return Response({'error': 'Permission denied'}, status=403)
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""SELECT c.*,coalesce((select sum(p.p_price) as total_price from purchase p, 
+                                handcraftedgood hg,
+                                belong bel
+                                WHERE hg.p_id = bel.p_id AND c.category_id = bel.category_id 
+                                AND  p.p_id = hg.p_id AND p.p_date<(select report_time from report where report_id=%s)
+                           ),0) as total_price FROM category c
+                               """,[report_id])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the customers
+            reports = [dict(zip(columns, row)) for row in rows]
+
+            return Response(reports, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
+
+@api_view(['GET'])
+@permission_classes([CustomPermission])
+def view_business_reports(request,report_id):
+    if request.method == 'GET':
+        try:
+            user_id = get_uid(request)
+            # Get customer ID from the request
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) FROM admin WHERE id = %s
+                """, [user_id])
+                is_admin = cursor.fetchone()[0]
+                logger.info(f"Is Admin: {is_admin}")
+
+                if not is_admin:
+                    return Response({'error': 'Permission denied'}, status=403)
+                # Fetch purchase history for the given customer ID
+                cursor.execute("""SELECT profile.name, coalesce((select sum(p.p_price) as total_price from purchase p, 
+                                handcraftedgood hg
+                                WHERE hg.b_id = b.id
+                                AND  p.p_id = hg.p_id AND p.p_date<(select report_time from report where report_id=%s)
+                           ),0) as total_price FROM business b JOIN profile ON profile.id = b.id
+                               """,[report_id])
+                rows = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+
+            # Construct a list of dictionaries representing the customers
+            reports = [dict(zip(columns, row)) for row in rows]
+
+            return Response(reports, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+    else:
+        return Response({'error': 'Invalid request method'}, status=405)
