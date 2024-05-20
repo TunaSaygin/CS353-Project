@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import image from '../../DB_html/assets/img/dogs/image3.jpeg';
+import image from '../assets/img_placeholder.png';
 import { Modal } from "react-bootstrap";
 import { useAsyncError, useNavigate } from "react-router-dom";
 import ProductDetail from "./ProductDetail";
@@ -11,9 +11,10 @@ export default function Mainpage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [search, setSearch] = useState(null);
+    const [cards, setCards] = useState(null);
     const [categories, setCategories] = useState([]);
     const [selectedCategory,setSelectedCategory] = useState(null)
-    const {baseUrl} = useAuth();
+    const {baseUrl, reloadProfileChanges} = useAuth();
     const baseURL = "http://localhost:8080/purchase/all-products/";
     const token = window.localStorage.getItem("token");
     const [min,setMin] = useState(null);
@@ -24,9 +25,13 @@ export default function Mainpage() {
         const fetchData = async () => {
             try {
                 const response = await axios.get(baseURL);
-                setProducts(response.data); // Set the data state with the fetched data
-                setLoading(false); // Set loading to false since data is fetched
+                const r2 = await axios.get("http://localhost:8080/profile/my-gift-cards/");
+                setCards(r2.data);
+                setProducts(response.data);
+                setLoading(false);
                 console.log(response.data)
+                console.log("hereeee");
+                console.log(r2.data);
             } catch (error) {
                 setError(error);
                 setLoading(false);
@@ -48,14 +53,6 @@ export default function Mainpage() {
         return (
             <div>
                 <h2>Loading...</h2>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div>
-                <h2>Error: {error.message}</h2>
             </div>
         );
     }
@@ -86,6 +83,26 @@ export default function Mainpage() {
           console.error('Error filtering products:', error);
         }
       };
+    
+    async function handleRedeem(id) {
+        try {
+            const res = await axios.post("http://localhost:8080/profile/redeem-gift-card/", {gift_id: id});
+            const r2 = await axios.get("http://localhost:8080/profile/my-gift-cards/");
+            setCards(r2.data);
+            reloadProfileChanges();
+        }
+        catch(error) {
+            setError(error);
+        }
+    }
+
+    if (error) {
+        return (
+            <div>
+                <h2>Error: {error.message}</h2>
+            </div>
+        );
+    }
     return (
         <>
            <div className="container mt-5 mb-5">
@@ -127,6 +144,22 @@ export default function Mainpage() {
             </div>
         </div>
 
+        <div className="container mt-5 mb-5">
+                <div className="row justify-content-center">
+                        {cards ? (cards.map((card) => (
+                            <div key={card.gift_id} className="col-md-4 mb-2 justify-items-center">
+                                <div className="card col-md-9">
+                                    <h5>Gift Card from {card.name}</h5>
+                                    <h6>Amount: {card.gift_amount}₺</h6>
+                                    <h6>Created: {card.creation_date}</h6>
+                                    <h6>Message: {card.gift_message}</h6>
+                                    <div><button onClick={() => handleRedeem(card.gift_id)} className="btn btn-primary">Redeem</button></div>
+                                </div>
+                            </div>
+                        ))): <></>}
+                </div>
+        </div>
+
             <div className="container mt-5 mb-5">
                 <div className="row justify-content-center">
                     {products.map((product) => (
@@ -137,6 +170,7 @@ export default function Mainpage() {
         </>
     );
 }
+
 function Product(props) {
     const imageURL = "http://localhost:8080/product/photo/";
     const purchaseURL = "http://localhost:8080/purchase/";
