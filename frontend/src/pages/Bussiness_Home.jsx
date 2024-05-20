@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import image from '../../DB_html/assets/img/dogs/image3.jpeg';
-import img2 from '../../DB_html/assets/img/dogs/image2.jpeg';
+import image from '../assets/img_placeholder.png';
+import img2 from '../assets/img_placeholder.png';
 import { useAuth } from '../context/authcontext';
 import axios from 'axios';
 import { Button, Form, Modal } from 'react-bootstrap';

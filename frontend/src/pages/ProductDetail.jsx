@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
-import img1 from '../../DB_html/assets/img/dogs/image1.jpeg';
+import img1 from '../assets/img_placeholder.png';
 import axios from "axios";
 
 export default function ProductDetail({hideButtons, id}) {
     const [data,setData] = useState(null);
     const [error, setError] = useState(null);
     const baseURL = "http://localhost:8080/";
+    const token = window.localStorage.getItem("token");
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     useEffect(() => {
        async function getData() {
             try{
+                console.log("here id");
                 console.log(id);
-                const res = await axios.get(`${baseURL}purchase/view-product/`, {selected_pid: id});
+                const res = await axios.get(`${baseURL}purchase/view-product/${id}/`);
                 setData(res.data);
                 console.log(res.data);
             }
@@ -27,7 +30,7 @@ export default function ProductDetail({hideButtons, id}) {
                 <div className="col-lg-8">
                     <div className="card">
                         <div className="row">
-                            <Product name="Crochet Hat" hideButtons={hideButtons} about="Handmade hat that I made using recycled wool. It is eco-friendly. It is made of elastic wool so it is one size fits all." price="100₺" username="Sila's Mini Shop"></Product>
+                            {data ? <Product name={data.name} hideButtons={hideButtons} price={data.current_price} image_name={data.photo_metadata}></Product>: <></>}
                         </div>
                     </div>
                 </div>
@@ -37,6 +40,7 @@ export default function ProductDetail({hideButtons, id}) {
 }
 
 function Product(props) {
+    const imageURL = "http://localhost:8080/product/photo/";
     function handleCart(e) {
         e.preventDefault();
         console.log("added to the cart");
@@ -46,12 +50,14 @@ function Product(props) {
         e.preventDefault();
         console.log("added to the favs");
     }
-    const{name, about, price, username, hideButtons} = props;
+    const{name, about, price, username, hideButtons, image_name} = props;
     return (
         <>
             <div className="col-lg-6">
                 <div className="text-center p-4"> 
-                    <img className="rounded img-fluid" id="main-image" src={img1} alt="Product Main" /> 
+                {image_name? <img src={`${imageURL}${image_name}/`} className="img-fluid rounded-start rounded-end" alt="product" />
+                            :
+                            <img src={img1} className="img-fluid rounded-start rounded-end" alt="product" />}
                 </div>
             </div>
             <div className="col-lg-6">
@@ -59,7 +65,7 @@ function Product(props) {
                     <div className="mt-4 mb-3"> 
                         <span className="text-muted brand">{username}</span>
                         <h5>{name}</h5>
-                        <span className="act-price">{price}</span>
+                        <span className="act-price">{price}₺</span>
                     </div>
                     <p className="about">{about}</p>
                     {hideButtons || <div className="cart mt-4 align-items-center"> 
