@@ -147,7 +147,7 @@ export default function AdminPage() {
       {activeTab === 'businesses' && (
         <Row>
           <Col>
-           <BussinessTable businessData={businessData} />
+           <BussinessTable businessData={businessData} setBusinessData={setBusinessData} />
           </Col>
         </Row>
       )}
@@ -192,7 +192,19 @@ export default function AdminPage() {
     );
   }
 
-function BussinessTable({businessData}){
+function BussinessTable({businessData, setBusinessData}){
+  async function handleVerification(id) {
+    try {
+      console.log(`business_id ${id}`);
+      const res = await axios.post("http://localhost:8080/profile/verify-business/", {business_id: id});
+      const r2 = await axios.get("http://localhost:8080/activity/get-all-businesses/");
+      console.log(r2.data);
+      setBusinessData(r2.data);
+    }
+    catch(error) {
+      console.log(`${error.message}`);
+    }
+  }
   return(
     <Table striped bordered hover>
       <thead>
@@ -210,7 +222,7 @@ function BussinessTable({businessData}){
             <td>{business.income}</td>
             <td>{business.product_name}</td>
             <td>
-              <Button variant="outline-primary">Verify</Button>
+              <Button disabled={(business.verification_date)} onClick={()=>handleVerification(business.id)} variant="outline-primary">Verify</Button>
             </td>
           </tr>
         ))}
@@ -465,7 +477,7 @@ function CategoryTable({categories, setCategoryData}){
     else if(modalContent === 'Update Category'){
       updateCategory(selectedCategory.category_id,name);
     }
-    onSave({ name, image });
+    //onSave({ name, image });
   };
   const addCategory = async (categoryName) => {
     try {
@@ -473,7 +485,7 @@ function CategoryTable({categories, setCategoryData}){
         category_name: categoryName,
       });
       console.log('Category added:', response.data);
-      fetch_response = await axios.get(`${baseUrl}/product/list-categories/`);
+      const fetch_response = await axios.get(`${baseUrl}/product/list-categories/`);
       setCategoryData(fetch_response.data);
       setShowModal(false)
       return response.data;

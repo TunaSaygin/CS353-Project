@@ -210,8 +210,11 @@ def verify_business(request):
             data = request.data
 
             business_id = data.get('business_id')
-            admin_id = data.get('admin_id')
+            admin_id = get_uid(request)
 
+            print("business_id", business_id)
+            print("admin_id", admin_id)
+            
             if not business_id or not admin_id:
                 return Response({'error': 'business_id and admin_id are required'}, status=400)
 

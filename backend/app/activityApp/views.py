@@ -52,7 +52,7 @@ def get_all_businesses(request):
                 pid_bid_max AS (
                            select bm.b_id, pbs.name as product_name, bm.max_price
                            FROM pid_bid_sum pbs JOIN bid_max bm ON pbs.b_id = bm.b_id and pbs.total_price=bm.max_price             
-                )SELECT b.id,b.income ,p.name,pbm.product_name
+                )SELECT b.id,b.income ,p.name,pbm.product_name, b.verification_date
                            FROM business b NATURAL JOIN profile p
                            LEFT JOIN pid_bid_max pbm ON b.id = pbm.b_id           
             """)
