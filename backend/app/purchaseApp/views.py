@@ -66,7 +66,6 @@ def list_all_products(request):
         cursor.execute(query)
         products = cursor.fetchall()
 
-    # TODO: Serialize the products before returning the response
     return Response(products)
 
 

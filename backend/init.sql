@@ -1,5 +1,3 @@
--- todo create tables
--- todo fill api calls according to table
 CREATE TABLE profile (
     id SERIAL PRIMARY KEY,
     name VARCHAR(80) UNIQUE NOT NULL,
