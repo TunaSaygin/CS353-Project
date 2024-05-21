@@ -85,7 +85,6 @@ def custom_login(request):
     print(email)
     print(password)
 
-    # Raw SQL query to fetch user data by username
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT id, email, password, image_metadata,name
@@ -133,7 +132,7 @@ def custom_login(request):
         else:
             return Response({'error': 'User not found'}, status=404)
 
-#api/profile  and api/profile/update
+
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def getProfile(request):
@@ -176,13 +175,10 @@ def getProfile(request):
 #     serializer = ProfileSerializer(user, data=request.data, partial=True)
 
 #     if serializer.is_valid():
-#         # Extracting data from serializer
 #         validated_data = serializer.validated_data
 #         first_name = validated_data.get('first_name')
 #         last_name = validated_data.get('last_name')
-#         # Add other fields as needed
 
-#         # Raw SQL query to update user profile
 #         with connection.cursor() as cursor:
 #             cursor.execute("""
 #                 UPDATE profile
@@ -190,14 +186,12 @@ def getProfile(request):
 #                 WHERE user_id = %s
 #             """, [first_name, last_name, user.id])
 
-#         # Fetch updated profile data
 #         with connection.cursor() as cursor:
 #             cursor.execute("""
 #                 SELECT * FROM profile
 #                 WHERE user_id = %s
 #             """, [user.id])
 #             profile_data = cursor.fetchone()
-#         # Returning updated profile data
 #         return Response(profile_data)
 #     else:
 #         return Response(serializer.errors, status=400)
@@ -369,8 +363,6 @@ def update_profile(request):
             photo_metadata = unique_filename
             photo_blob = image_file.read()
         with connection.cursor() as cursor:
-            # Update profile details
-            # Update profile image if provided
             if photo_metadata and photo_blob:
                 cursor.execute("""
                     UPDATE profile
@@ -407,11 +399,9 @@ def view_profile_photo(request,image_metadata):
                 return Response('Image not found', status=404)
 
         photo_blob, photo_metadata = result
-
-        # Determine the MIME type of the file based on its extension
         mime_type, _ = mimetypes.guess_type(photo_metadata)
         if mime_type is None:
-            mime_type = 'application/octet-stream'  # Use a binary stream type if MIME type is unknown
+            mime_type = 'application/octet-stream'
         print("The mime type is",mime_type)
         return HttpResponse(photo_blob, content_type=mime_type)
     except Exception as e:
