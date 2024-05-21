@@ -9,14 +9,12 @@ from profileApp.custom_permission import CustomPermission, get_uid
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def list_all_products(request):
-    # Extracting filter parameters from the request
     product_type = request.query_params.get('product_type')
     min_price = request.query_params.get('min_price')
     max_price = request.query_params.get('max_price')
     business_id = request.query_params.get('business_id')
     search_str = request.query_params.get('search_str')
 
-    # Constructing the base SQL query
     query = """
         SELECT hg.*, photo_name.photo_metadata , profile.name
         FROM handcraftedgood hg
@@ -27,7 +25,6 @@ def list_all_products(request):
         JOIN business b ON hg.b_id = b.id
         JOIN profile ON profile.id = b.id
     """
-    # Constructing the JOIN clause based on the presence of business_id filter
     if business_id:
         query += """
             JOIN business b ON hg.b_id = b.id
@@ -38,7 +35,6 @@ def list_all_products(request):
             JOIN belong bl ON hg.p_id = bl.p_id
         """
 
-    # Constructing the WHERE clause based on the provided filters
     query += """
         WHERE 1=1
     """
@@ -65,7 +61,6 @@ def list_all_products(request):
         query += " AND hg.name LIKE '%{}%'".format(search_str)
         #params.append(search_str)
 
-    # Executing the SQL query with the constructed parameters
     with connection.cursor() as cursor:
         print(query)
         cursor.execute(query)
@@ -79,7 +74,6 @@ def list_all_products(request):
 @permission_classes([CustomPermission])
 def get_business_products(request):
     business_id = get_uid(request)
-     # Fetching details of the selected product
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT h.p_id, h.name, h.current_price, h.inventory, photo_name.photo_metadata
@@ -97,11 +91,9 @@ def get_business_products(request):
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def view_product(request, selected_pid):
-    # Extracting selected product ID from request data
     #selected_pid = request.data.get('selected_pid')
     print("selected_pid",selected_pid)
 
-    # Fetching details of the selected product
     with connection.cursor() as cursor:
         cursor.execute("""
                SELECT h.name, h.description, h.current_price AS current_price, pp.price AS past_price, h.inventory, p.photo_metadata, c.category_name, p1.name as business_name
@@ -145,12 +137,10 @@ def view_product(request, selected_pid):
 @api_view(['POST'])
 @permission_classes([CustomPermission])
 def add_to_cart(request):
-    # Extracting customer ID, product ID, and quantity from request data
     customer_id = get_uid(request)
     product_id = request.data.get('product_id')
     quantity = request.data.get('quantity')
 
-    # Adding product to shopping cart or updating quantity if already exists
     with connection.cursor() as cursor:
         cursor.execute("SELECT inventory FROM handcraftedgood WHERE p_id = %s", [product_id])
         r = cursor.fetchone()
@@ -190,7 +180,6 @@ def add_to_cart(request):
 def purchase(request):
     try:
         with transaction.atomic():
-            # Extracting customer ID and payment details from request data
             customer_id = get_uid(request)
             balance = 0
             cart_total = 0
@@ -202,7 +191,6 @@ def purchase(request):
                 else:
                     return Response({'error': 'Customer not found'}, status=404)
 
-                # Fetching products from the shopping cart
                 cursor.execute("""
                     SELECT h.p_id, h.current_price, s.quantity
                     FROM shoppingcart s
@@ -213,17 +201,14 @@ def purchase(request):
                 print("cart_items", cart_items)
                 print("customer_id", customer_id)
 
-                # Calculating the total cost of items in the shopping cart
                 cart_total = sum(item[1] * item[2] for item in cart_items)
 
                 if balance < cart_total:
                     return Response({'error': 'Insufficient funds'}, status=404)
 
-                # Decrementing the user's balance
                 new_balance = balance - cart_total
                 cursor.execute("UPDATE customer SET balance = %s WHERE id = %s", [new_balance, customer_id])
 
-                # Inserting purchase records into the purchase table
                 purchase_records = []
                 for item in cart_items:
                     purchase_records.append((customer_id, item[0], datetime.now(), item[1] * item[2], None,item[2]))
@@ -233,13 +218,12 @@ def purchase(request):
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, purchase_records)
 
-                # Clearing the shopping cart after purchase
                 cursor.execute("DELETE FROM shoppingcart WHERE c_id = %s", [customer_id])
 
         return Response({'message': 'Purchase completed successfully'}, status=200)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-#Todo: balance arttırma yeri lazım
+
 
 @api_view(['POST'])
 @permission_classes([CustomPermission])
@@ -323,21 +307,18 @@ def decrease_item_quantity(request):
 def delete_from_wishlist(request):
     try:
         user_id = get_uid(request)
-        
-        # Extracting data from the request
+
         p_id = request.data.get('p_id')
 
         if not p_id:
             return Response({'error': 'Product ID is required'}, status=400)
 
         with connection.cursor() as cursor:
-            # Delete from wishlist
             cursor.execute("""
                 DELETE FROM wishlist
                 WHERE c_id = %s AND p_id = %s
             """, [user_id, p_id])
 
-            # Check if the deletion was successful
             cursor.execute("""
                 SELECT COUNT(*) FROM wishlist
                 WHERE c_id = %s AND p_id = %s
@@ -359,7 +340,6 @@ def get_wishlist(request):
         user_id = get_uid(request)
 
         with connection.cursor() as cursor:
-            # Fetch all products in the user's wishlist
             cursor.execute("""
                 SELECT w.c_id, w.p_id, p.name, p.current_price, p.description 
                 FROM wishlist w
@@ -368,14 +348,11 @@ def get_wishlist(request):
             """, [user_id])
             rows = cursor.fetchall()
 
-            # If no rows are returned, return an empty list
             if not rows:
                 return Response([], status=200)
 
-            # Get column names
             columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the wishlist
             wishlist = [dict(zip(columns, row)) for row in rows]
 
         return Response(wishlist, status=200)
@@ -407,10 +384,8 @@ def get_shopping_cart(request):
 def get_purchase_history(request):
     if request.method == 'GET':
         try:
-            # Get customer ID from the request
             c_id = get_uid(request)
             with connection.cursor() as cursor:
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT purchase.c_id, purchase.p_date, purchase.p_id,
                                purchase.return_date,  p1.name as customer_name, p2.name as business_name,
                                hg.name as product_name
@@ -423,7 +398,6 @@ def get_purchase_history(request):
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             purchases = [dict(zip(columns, row)) for row in rows]
 
             return Response({'purchases': purchases}, status=200)
@@ -438,10 +412,8 @@ def get_purchase_history(request):
 def get_business_purchase_history(request):
     if request.method == 'GET':
         try:
-            # Get customer ID from the request
             b_id = get_uid(request)
             with connection.cursor() as cursor:
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT purchase.c_id, purchase.p_date, purchase.p_id,
                                purchase.return_date,  p1.name as customer_name, p2.name as business_name,
                                hg.name as product_name, c.delivery_address
@@ -454,7 +426,6 @@ def get_business_purchase_history(request):
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             purchases = [dict(zip(columns, row)) for row in rows]
 
             return Response({'purchases': purchases}, status=200)
@@ -462,6 +433,4 @@ def get_business_purchase_history(request):
             return Response({'error': str(e)}, status=400)
     else:
         return Response({'error': 'Invalid request method'}, status=405)
-    
-    
     

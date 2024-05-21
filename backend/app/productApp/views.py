@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-# from django.shortcuts import render
 from django.db import connection
 from rest_framework.decorators import api_view
 import psycopg2
@@ -108,12 +107,11 @@ def add_product_photo(request):
         try:
             data = request.data
             
-            p_id = data.get('p_id') # I assume b_id and p_id are received from request.?????
+            p_id = data.get('p_id')
             b_id = data.get('b_id')
             photo_metadata = data.get('photo_metadata')
-            photo_blob = data.get('photo_blob')  # Assuming this is a base64 encoded string
+            photo_blob = data.get('photo_blob')
 
-            # Decode the base64 encoded photo_blob
             import base64
             photo_blob_decoded = base64.b64decode(photo_blob)
 
@@ -206,21 +204,18 @@ def update_product_photo(request):
 
     try:
         with connection.cursor() as cursor:
-            # Check if the photo exists
             cursor.execute("""
                 SELECT photo_metadata FROM productphoto WHERE p_id = %s AND b_id = %s
             """, (p_id, b_id))
             existing_photo = cursor.fetchone()
 
             if existing_photo:
-                # Update existing photo
                 cursor.execute("""
                     UPDATE productphoto
                     SET photo_metadata = %s, photo_blob = %s
                     WHERE p_id = %s AND b_id = %s
                 """, (photo_metadata, psycopg2.Binary(photo_blob), p_id, b_id))
             else:
-                # Insert new photo
                 cursor.execute("""
                     INSERT INTO productphoto (p_id, b_id, photo_metadata, photo_blob)
                     VALUES (%s, %s, %s, %s)
@@ -251,10 +246,9 @@ def view_product_photo(request,photo_metadata):
 
         photo_blob, photo_metadata = result
 
-        # Determine the MIME type of the file based on its extension
         mime_type, _ = mimetypes.guess_type(photo_metadata)
         if mime_type is None:
-            mime_type = 'application/octet-stream'  # Use a binary stream type if MIME type is unknown
+            mime_type = 'application/octet-stream'
         print("The mime type is",mime_type)
         return HttpResponse(photo_blob, content_type=mime_type)
     except Exception as e:
@@ -337,7 +331,6 @@ def list_categories(request):
             rows = cursor.fetchall()
             columns = [col[0] for col in cursor.description]
 
-        # Construct a list of dictionaries representing the customers
         categories = [dict(zip(columns, row)) for row in rows]
         return Response(categories,status=200)
     except Exception as e:

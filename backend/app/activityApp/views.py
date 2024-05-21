@@ -14,7 +14,7 @@ from profileApp.custom_permission import CustomPermission, get_uid
 
 logger = logging.getLogger(__name__)
 
-# Create your views here.
+
 @api_view(['GET'])
 @permission_classes([CustomPermission])
 def get_all_businesses(request):
@@ -26,7 +26,6 @@ def get_all_businesses(request):
             return Response({'error': 'User ID not found'}, status=400)
 
         with connection.cursor() as cursor:
-            # Check if the user is an admin
             cursor.execute("""
                 SELECT COUNT(*) FROM admin WHERE id = %s
             """, [user_id])
@@ -36,7 +35,6 @@ def get_all_businesses(request):
             if not is_admin:
                 return Response({'error': 'Permission denied'}, status=403)
 
-            # Fetch all businesses
             cursor.execute("""
                 WITH pid_bid_sum AS (
                            select hg.b_id as b_id, hg.p_id as p_id,hg.name as name,sum(p.p_price) as total_price                       
@@ -63,11 +61,9 @@ def get_all_businesses(request):
                 logger.info("No businesses found")
                 return Response([], status=200)
 
-            # Get column names
             columns = [col[0] for col in cursor.description]
             logger.info(f"Columns: {columns}")
 
-            # Construct a list of dictionaries representing the businesses
             businesses = [dict(zip(columns, row)) for row in rows]
 
         return Response(businesses, status=200)
@@ -87,7 +83,6 @@ def get_all_customers(request):
             return Response({'error': 'User ID not found'}, status=400)
 
         with connection.cursor() as cursor:
-            # Check if the user is an admin
             cursor.execute("""
                 SELECT COUNT(*) FROM admin WHERE id = %s
             """, [user_id])
@@ -97,7 +92,6 @@ def get_all_customers(request):
             if not is_admin:
                 return Response({'error': 'Permission denied'}, status=403)
 
-            # Fetch all customers
             cursor.execute("""
                 SELECT id, balance, delivery_address, name FROM customer NATURAL JOIN profile
             """)
@@ -108,11 +102,9 @@ def get_all_customers(request):
                 logger.info("No customers found")
                 return Response([], status=200)
 
-            # Get column names
             columns = [col[0] for col in cursor.description]
             logger.info(f"Columns: {columns}")
 
-            # Construct a list of dictionaries representing the customers
             customers = [dict(zip(columns, row)) for row in rows]
 
         return Response(customers, status=200)
@@ -132,7 +124,6 @@ def get_most_sold_product(request, business_id):
             return Response({'error': 'User ID not found'}, status=400)
 
         with connection.cursor() as cursor:
-            # Verify if the user is an admin
             cursor.execute("""
                 SELECT COUNT(*) FROM admin WHERE id = %s
             """, [user_id])
@@ -142,7 +133,6 @@ def get_most_sold_product(request, business_id):
             if not is_admin:
                 return Response({'error': 'Permission denied'}, status=403)
 
-            # Query to get the most sold product for the specified business
             cursor.execute("""
                 SELECT p.p_id, hg.name, hg.description, hg.current_price, COUNT(*) as total_sold
                 FROM purchase p
@@ -159,11 +149,9 @@ def get_most_sold_product(request, business_id):
                 logger.info("No sales found for this business")
                 return Response({'message': 'No sales found for this business'}, status=200)
 
-            # Get column names
             columns = [col[0] for col in cursor.description]
             logger.info(f"Columns: {columns}")
 
-            # Construct a dictionary representing the most sold product
             most_sold_product = dict(zip(columns, row))
 
         return Response(most_sold_product, status=200)
@@ -178,7 +166,6 @@ def get_all_purchases(request):
     if request.method == 'GET':
         try:
             user_id = get_uid(request)
-            # Get customer ID from the request
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM admin WHERE id = %s
@@ -188,7 +175,6 @@ def get_all_purchases(request):
 
                 if not is_admin:
                     return Response({'error': 'Permission denied'}, status=403)
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT purchase.c_id, purchase.p_date, 
                                purchase.return_date,  p1.name as customer_name, p2.name as business_name,
                                hg.name as product_name
@@ -200,7 +186,6 @@ def get_all_purchases(request):
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             purchases = [dict(zip(columns, row)) for row in rows]
 
             return Response(purchases, status=200)
@@ -217,7 +202,6 @@ def create_report(request):
             admin_id = get_uid(request)
             data = request.data
             description = data.get('description')
-            # Get customer ID from the request
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM admin WHERE id = %s
@@ -227,7 +211,6 @@ def create_report(request):
 
                 if not is_admin:
                     return Response({'error': 'Permission denied'}, status=403)
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""INSERT INTO REPORT(admin_id, description, report_time)
                                VALUES(%s,%s,NOW())
                                """,[admin_id,description])
@@ -245,7 +228,6 @@ def list_reports(request):
     if request.method == 'GET':
         try:
             user_id = get_uid(request)
-            # Get customer ID from the request
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM admin WHERE id = %s
@@ -255,14 +237,12 @@ def list_reports(request):
 
                 if not is_admin:
                     return Response({'error': 'Permission denied'}, status=403)
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT r.report_id ,r.report_time,r.description ,p.name from report r
                                JOIN profile p ON p.id = r.admin_id
                                """,[])
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             reports = [dict(zip(columns, row)) for row in rows]
 
             return Response(reports, status=200)
@@ -277,7 +257,6 @@ def view_category_reports(request,report_id):
     if request.method == 'GET':
         try:
             user_id = get_uid(request)
-            # Get customer ID from the request
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM admin WHERE id = %s
@@ -287,7 +266,6 @@ def view_category_reports(request,report_id):
 
                 if not is_admin:
                     return Response({'error': 'Permission denied'}, status=403)
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT c.*,coalesce((select sum(p.p_price) as total_price from purchase p, 
                                 handcraftedgood hg,
                                 belong bel
@@ -298,7 +276,6 @@ def view_category_reports(request,report_id):
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             reports = [dict(zip(columns, row)) for row in rows]
 
             return Response(reports, status=200)
@@ -313,7 +290,6 @@ def view_business_reports(request,report_id):
     if request.method == 'GET':
         try:
             user_id = get_uid(request)
-            # Get customer ID from the request
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT COUNT(*) FROM admin WHERE id = %s
@@ -323,7 +299,6 @@ def view_business_reports(request,report_id):
 
                 if not is_admin:
                     return Response({'error': 'Permission denied'}, status=403)
-                # Fetch purchase history for the given customer ID
                 cursor.execute("""SELECT profile.name, coalesce((select sum(p.p_price) as total_price from purchase p, 
                                 handcraftedgood hg
                                 WHERE hg.b_id = b.id
@@ -333,7 +308,6 @@ def view_business_reports(request,report_id):
                 rows = cursor.fetchall()
                 columns = [col[0] for col in cursor.description]
 
-            # Construct a list of dictionaries representing the customers
             reports = [dict(zip(columns, row)) for row in rows]
 
             return Response(reports, status=200)

@@ -20,10 +20,10 @@ def get_uid(request):
 class CustomPermission(BasePermission):
     def has_permission(self, request, view):
         if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(' ')[1]  # Extract token from header
+            token = request.headers['Authorization'].split(' ')[1]
             user = self.authenticate_user(token)
             if user:
-                request.user = user  # Attach authenticated user to the request object
+                request.user = user
                 return True
             else:
                 return False
@@ -42,6 +42,6 @@ class CustomPermission(BasePermission):
             else:
                 return None
         except jwt.ExpiredSignatureError:
-            return None  # Token has expired
+            return None
         except jwt.InvalidTokenError:
-            return None  # Invalid token or user not found
+            return None
